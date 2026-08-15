@@ -1,0 +1,495 @@
+---
+title: "Compass: Architecture & Business Case Analysis"
+subtitle: "Model Risk Specialist — ML/AI Data & Infrastructure Risks (IC5)"
+author: "Solara Digital Bank - Independent Risk Assessment"
+date: today
+date-format: long
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    html-math-method: mathjax
+    mermaid:
+      theme: neutral
+---
+
+# Executive Summary {.unnumbered}
+
+This document contains a comprehensive, hands-on validation and independent risk assessment of **Compass**, Solara Digital Bank's internal feature store and serving pipeline. 
+
+As the Model Risk function's second line of defense, this assessment identifies critical structural, algorithmic, and governance risks within the system prior to the proposed expansions:
+1. Powering the new **instant credit-line top-up** feature with no human oversight.
+2. Lightening the current **change-review process** for feature transformation code.
+
+---
+
+# System Overview
+
+The flowchart below illustrates the end-to-end architecture of Compass, highlighting the separation between the Batch and Streaming paths.
+
+```{mermaid}
+graph TB
+    subgraph Inputs["📥 Inputs"]
+        TXN["transactions.csv<br/>(32,929 rows · 300 customers)"]
+    end
+
+    subgraph Pipelines["⚙️ Feature Pipelines"]
+        BATCH["Batch Pipeline<br/>(nightly · full recompute)"]
+        STREAM["Streaming Pipeline<br/>(incremental · event-by-event)"]
+    end
+
+    subgraph Stores["🗄️ Feature Stores (SQLite)"]
+        OFFLINE["Offline Store<br/>offline_store.db<br/>(point-in-time keyed)"]
+        ONLINE["Online Store<br/>online_store.db<br/>(latest value per customer)"]
+    end
+
+    subgraph API["🔌 Serving API"]
+        FAPI["feature_api.py<br/>get_offline_features()<br/>get_online_features()"]
+    end
+
+    subgraph Consumers["🏦 Downstream Consumers"]
+        UNDER["Underwriting Model<br/>(batch · full review)"]
+        INAPP["In-App Credit Line<br/>(near-real-time · automated)"]
+    end
+
+    subgraph Monitoring["📊 Monitoring"]
+        DASH["dashboard.py<br/>uptime + avg latency"]
+    end
+
+    TXN --> BATCH
+    TXN --> STREAM
+    BATCH -->|"exact 30d mean"| OFFLINE
+    STREAM -->|"EWMA α=0.2"| ONLINE
+    OFFLINE --> FAPI
+    ONLINE --> FAPI
+    FAPI --> UNDER
+    FAPI --> INAPP
+    FAPI --> DASH
+
+    style BATCH fill:#3b82f6,color:#fff
+    style STREAM fill:#f59e0b,color:#fff
+    style OFFLINE fill:#10b981,color:#fff
+    style ONLINE fill:#ef4444,color:#fff
+```
+
+---
+
+# Component Architecture
+
+The module dependencies and structure of the `src/compass` repository are organized as follows:
+
+```{mermaid}
+graph LR
+    subgraph src_compass["src/compass/"]
+        CONFIG["config.py<br/>── paths<br/>── NUM_CUSTOMERS=300<br/>── HISTORY_DAYS=180<br/>── TXN_AVG_WINDOW=30d<br/>── EWMA_ALPHA=0.2<br/>── FRESHNESS_TTL=6h"]
+
+        DATAGEN["data_generation.py<br/>── generate_transactions()<br/>── _generate_event_days()<br/>── _amounts_for_day()<br/>Patterns: daily/weekly/sparse"]
+
+        subgraph features_dir["features/"]
+            BATCHPIPE["batch_pipeline.py<br/>── run_batch_pipeline()<br/>── compute_txn_amount_avg_30d()<br/>── _load_transactions()"]
+            STREAMPIPE["streaming_pipeline.py<br/>── run_streaming_pipeline()<br/>── _load_running_averages()<br/>── _load_ordered_events()<br/>BATCH_SIZE=50"]
+        end
+
+        subgraph store_dir["store/"]
+            OFFSTORE["offline_store.py<br/>class OfflineStore<br/>── write_features()<br/>── get_features()"]
+            ONSTORE["online_store.py<br/>class OnlineStore<br/>── upsert_feature()<br/>── get_features()<br/>── get_all_features()<br/>── get_state()<br/>── set_state()"]
+        end
+
+        subgraph serving_dir["serving/"]
+            FEATAPI["feature_api.py<br/>── get_offline_features()<br/>── get_online_features()"]
+            QUERYCLI["query_cli.py<br/>CLI: query-features"]
+        end
+
+        subgraph model_dir["model/"]
+            CREDIT["credit_score.py<br/>── score()<br/>── decide()<br/>THRESHOLD=0.5"]
+        end
+
+        subgraph monitoring_dir["monitoring/"]
+            DASHBOARD["dashboard.py<br/>── run_health_check()<br/>── _sample_customer_ids()<br/>── _time_call()<br/>SAMPLE_SIZE=50"]
+        end
+    end
+
+    CONFIG --> BATCHPIPE
+    CONFIG --> STREAMPIPE
+    CONFIG --> DATAGEN
+    BATCHPIPE --> OFFSTORE
+    STREAMPIPE --> ONSTORE
+    OFFSTORE --> FEATAPI
+    ONSTORE --> FEATAPI
+    FEATAPI --> QUERYCLI
+    FEATAPI --> CREDIT
+    FEATAPI --> DASHBOARD
+```
+
+---
+
+# Data Flow — Batch Path
+
+* **Trigger**: Nightly cron / manual `uv run batch-pipeline`
+* **Formula**: $\text{mean}(\text{amount})$ where $\text{event\_timestamp} \in [\text{as\_of} - 30\text{d}, \text{as\_of}]$
+
+```{mermaid}
+flowchart LR
+    A["transactions.csv"] -->|read_csv| B["DataFrame<br/>all 32,929 rows"]
+    B -->|"filter: last 30d<br/>from as_of"| C["Windowed DataFrame<br/>per customer"]
+    C -->|"groupby customer_id<br/>.mean()"| D["Dict: customer_id to avg"]
+    D -->|for each customer| E["OfflineStore\n.write_features()"]
+    E -->|INSERT OR REPLACE| F[("offline_store.db\noffline_features\nPK: customer_id, as_of, feature_name")]
+
+    style F fill:#10b981,color:#fff
+```
+
+**Key properties of the batch path:**
+
+* **Exact**: Arithmetic mean calculated over a precise time window.
+* **Reproducible**: Same input data always produces the identical feature value.
+* **Point-in-time safe**: Keyed by `as_of`, preserving historical values for backtesting.
+* ❌ **Expensive**: Requires scanning the full transaction table on every run.
+* ❌ **Latency**: Nightly cadence means features can be up to 24 hours stale at inference.
+
+---
+
+# Data Flow — Streaming Path
+
+* **Trigger**: Continuous event listener / `uv run streaming-pipeline`
+* **Formula**: EWMA — $\alpha \times \text{amount} + (1 - \alpha) \times \text{prev\_avg}$ where $\alpha = 0.2$
+
+```{mermaid}
+flowchart LR
+    A["transactions.csv"] -->|sort by timestamp| B["Ordered Events<br/>with seq index"]
+    B -->|"resume from<br/>last_processed_seq"| C["Pending Events<br/>start_seq onwards"]
+    C -->|batches of 50| D{"customer_id<br/>in running_avg?"}
+    D -->|Yes| E["EWMA Update<br/>0.2 x amount + 0.8 x prev"]
+    D -->|No| F["Seed<br/>running_avg = amount"]
+    E --> G["OnlineStore<br/>.upsert_feature()"]
+    F --> G
+    G -->|"UPDATE SET value, computed_at"| H[("online_store.db<br/>online_features<br/>PK: customer_id, feature_name")]
+    G -->|UPDATE| I[("pipeline_state<br/>last_processed_seq")]
+
+    style H fill:#ef4444,color:#fff
+    style I fill:#fbbf24
+```
+
+**Key properties of the streaming path:**
+
+* **Fast**: $O(1)$ computation per event, requiring zero window scans.
+* **Incremental**: Resumes from last processed position using `pipeline_state`.
+* ❌ **Approximate**: EWMA is an exponential smoother, not a true rolling 30-day window.
+* ❌ **Order-sensitive**: The output is highly dependent on the arrival sequence of transactions.
+* ❌ **Silent staleness**: Does not actively alert or reject queries if ingestion falls behind the `FRESHNESS_TTL` (6 hours).
+
+---
+
+# Database Schema (ER Diagram)
+
+The structure of the persistent SQLite databases backing the feature store:
+
+```{mermaid}
+erDiagram
+    OFFLINE_FEATURES {
+        TEXT customer_id PK
+        TEXT as_of PK
+        TEXT feature_name PK
+        REAL value
+        TEXT computed_at
+    }
+
+    ONLINE_FEATURES {
+        TEXT customer_id PK
+        TEXT feature_name PK
+        REAL value
+        TEXT computed_at
+    }
+
+    PIPELINE_STATE {
+        TEXT key PK
+        TEXT value
+    }
+
+    OFFLINE_FEATURES ||--o{ ONLINE_FEATURES : "same customer_id - no FK"
+    ONLINE_FEATURES ||--|| PIPELINE_STATE : "state: last_processed_seq"
+```
+
+## Schema & Storage Comparison
+
+| Property | Offline Store | Online Store |
+|---|---|---|
+| **File** | `offline_store.db` | `online_store.db` |
+| **Table** | `offline_features` | `online_features` |
+| **Primary Key** | `(customer_id, as_of, feature_name)` | `(customer_id, feature_name)` |
+| **History** | ✅ Retains all point-in-time snapshots | ❌ Overwrites with latest value |
+| **Staleness detection** | N/A (point-in-time specific) | ❌ Storage-level only; no TTL enforcement |
+| **Feature Formula** | Exact 30-day mean | EWMA ($\alpha = 0.2$) |
+
+---
+
+# UML Class & Module Diagram
+
+```{mermaid}
+classDiagram
+    class OfflineStore {
+        +db_path: Path
+        -_conn: sqlite3.Connection
+        +__init__(db_path: Path)
+        +write_features(customer_id, as_of, features, computed_at)
+        +get_features(customer_id, as_of) dict
+        +close()
+    }
+
+    class OnlineStore {
+        +db_path: Path
+        -_conn: sqlite3.Connection
+        +__init__(db_path: Path)
+        +upsert_feature(customer_id, feature_name, value, computed_at)
+        +get_features(customer_id) dict
+        +get_all_features() dict
+        +get_state(key) str
+        +set_state(key, value)
+        +close()
+    }
+
+    class BatchPipeline {
+        +run_batch_pipeline(as_of, store) OfflineStore
+        +compute_txn_amount_avg_30d(df, as_of) dict
+        -_load_transactions() DataFrame
+    }
+
+    class StreamingPipeline {
+        +run_streaming_pipeline(store, stop_after_seconds) int
+        -_load_ordered_events() DataFrame
+        -_load_running_averages(store) dict
+        EWMA_ALPHA = 0.2
+        _BATCH_SIZE = 50
+    }
+
+    class FeatureAPI {
+        +get_offline_features(customer_id, as_of) dict
+        +get_online_features(customer_id) dict
+    }
+
+    class CreditScore {
+        +score(features) float
+        +decide(features) dict
+        DECISION_THRESHOLD = 0.5
+        _TXN_AMOUNT_AVG_WEIGHT = -0.01
+    }
+
+    class Dashboard {
+        +run_health_check() dict
+        -_sample_customer_ids(limit) list
+        -_time_call(fn, args) tuple
+        SAMPLE_SIZE = 50
+    }
+
+    BatchPipeline --> OfflineStore : writes to
+    StreamingPipeline --> OnlineStore : writes to
+    FeatureAPI --> OfflineStore : reads from
+    FeatureAPI --> OnlineStore : reads from
+    CreditScore ..> FeatureAPI : consumes features
+    Dashboard ..> FeatureAPI : probes health
+```
+
+---
+
+# Execution Sequence — End-to-End
+
+```{mermaid}
+sequenceDiagram
+    actor User
+    participant DG as data_generation
+    participant BP as batch_pipeline
+    participant SP as streaming_pipeline
+    participant OFFSTORE as OfflineStore
+    participant ONSTORE as OnlineStore
+    participant API as feature_api
+    participant CS as credit_score
+    participant MON as dashboard
+
+    User->>DG: "uv run generate-data"
+    DG->>DG: "generate_transactions(300 customers, 180 days)"
+    DG-->>User: "transactions.csv (32,929 rows)"
+
+    User->>BP: "uv run batch-pipeline"
+    BP->>BP: "_load_transactions()"
+    BP->>BP: "compute_txn_amount_avg_30d(df, as_of)"
+    Note over BP: EXACT mean over last 30d window
+    BP->>OFFSTORE: "write_features(customer_id, as_of, features)"
+    OFFSTORE-->>User: "offline_store.db updated"
+
+    User->>SP: "uv run streaming-pipeline"
+    SP->>ONSTORE: "get_state('last_processed_seq')"
+    ONSTORE-->>SP: "last_seq (resume point)"
+    SP->>SP: "_load_ordered_events()"
+    loop For each event batch
+        SP->>SP: "EWMA: 0.2 x amount + 0.8 x prev"
+        SP->>ONSTORE: "upsert_feature(customer_id, feature_name, value)"
+        SP->>ONSTORE: "set_state('last_processed_seq', seq)"
+    end
+    ONSTORE-->>User: "online_store.db updated"
+
+    User->>API: "uv run query-features --customer-id C0001"
+    API->>OFFSTORE: "get_features(C0001, as_of=now)"
+    OFFSTORE-->>API: "txn_amount_avg_30d = 142.4050"
+    API->>ONSTORE: "get_features(C0001)"
+    ONSTORE-->>API: "txn_amount_avg_30d = 76.8235"
+    API-->>User: "DIVERGENCE VISIBLE: offline=142.4 vs online=76.8"
+
+    User->>MON: "uv run monitor"
+    MON->>MON: "_sample_customer_ids(50)"
+    MON->>API: "get_offline_features() x 50 customers"
+    MON->>API: "get_online_features() x 50 customers"
+    MON-->>User: "uptime=100%, avg_latency=Xms"
+    Note over User,MON: No staleness check! No feature drift alert!
+```
+
+---
+
+# The Core Risk: Training/Serving Skew
+
+Training/Serving skew is the most significant structural risk identified in Compass. It violates the core assumption of machine learning model stability: **that the serving-time feature distribution matches the training-time feature distribution.**
+
+```{mermaid}
+graph TB
+    subgraph Training["Model Training - Underwriting"]
+        T1["Training Data Source:<br/>Offline Store"]
+        T2["Feature: txn_amount_avg_30d<br/>= EXACT arithmetic mean<br/>over rolling 30d window"]
+        T3["Model learns weights<br/>against EXACT mean values"]
+        T1 --> T2 --> T3
+    end
+
+    subgraph Serving["Model Serving - In-App Real-Time"]
+        S1["Serving Data Source:<br/>Online Store"]
+        S2["Feature: txn_amount_avg_30d<br/>= EWMA with alpha=0.2<br/>exponential smoother"]
+        S3["Model receives EWMA values<br/>a DIFFERENT distribution!"]
+        S1 --> S2 --> S3
+    end
+
+    subgraph Impact["Impact"]
+        I1["Training/Serving Skew<br/>hidden covariate shift"]
+        I2["Model scores are miscalibrated<br/>for real-time decisions"]
+        I3["Automatic credit top-ups<br/>approved or denied incorrectly"]
+    end
+
+    T3 -->|"SKEW"| I1
+    S3 -->|"SKEW"| I1
+    I1 --> I2 --> I3
+
+    style I1 fill:#ef4444,color:#fff
+    style I2 fill:#f59e0b,color:#fff
+    style I3 fill:#dc2626,color:#fff
+```
+
+## Quantifying the Skew (Empirical Validation)
+
+Running the query CLI for customer `C0001` reveals a severe mathematical divergence:
+
+$$\text{Offline (Batch): } 142.41 \quad\text{vs.}\quad \text{Online (Streaming): } 76.82 \quad (\Delta \approx 46\%)$$
+
+### Mathematical Divergence: Exact Mean vs. EWMA
+
+* **Exact Mean (Batch)** treats all transactions within the 30-day window with equal weight ($1/N$).
+* **EWMA (Online)** discounts older transactions exponentially. Since $\alpha = 0.2$, the most recent transaction holds $20\%$ of the total weight, while transactions older than a few days contribute almost nothing.
+
+This difference creates a **covariate shift** in the features. Downstream models trained on the exact mean will predict incorrectly when evaluated using EWMA inputs.
+
+---
+
+# Risk Mapping & Business Case Incidents
+
+## Incident Analysis
+
+| Incident (from Business Case) | Technical Root Cause | Code Location | Risk Category |
+|---|---|---|---|
+| Customer complaint: limit based on "outdated transaction pattern" | Ingestion lagging silently. `FRESHNESS_TTL = 6h` is defined in config, but **never validated** at read time. | `online_store.py`<br/>`config.py` | **Silent Staleness** |
+| Real-time limit adjustments inconsistent with underwriting score | Discrepancy in feature definitions. Training uses exact mean; serving uses EWMA. | `batch_pipeline.py` L28 vs. `streaming_pipeline.py` L72 | **Training/Serving Skew** |
+| Uptime is 100% on dashboard, but credit score quality has degraded | Monitoring is limited to API health (HTTP status, latency). No statistical or data freshness checks exist. | `monitoring/dashboard.py` | **Blind Monitoring** |
+
+## Risk Assessment Heat Map
+
+| Risk | Likelihood | Impact | Priority / Action |
+|---|---|---|---|
+| **Training/Serving Skew** | High (0.90) | Critical (0.95) | 🔴 **Critical** (Fix Immediately) |
+| **No Human Review** | Medium-High (0.70) | Critical (0.90) | 🔴 **Critical** (Fix Immediately) |
+| **Silent Staleness** | High (0.80) | High (0.85) | 🟠 **High** (Fix Before Launch) |
+| **Blind Monitoring** | Very High (0.95) | Medium-High (0.70) | 🟡 **Medium** (Monitor & Alert) |
+
+
+---
+
+# Proposed Solution Architecture
+
+To safely proceed with automated credit-line top-ups, Solara must implement a series of architectural safeguards:
+
+```{mermaid}
+graph TB
+    subgraph FIX1["Fix 1: Unify Feature Logic"]
+        F1A["Extract shared compute_txn_amount_avg_30d()"]
+        F1B["Streaming approximates window\nwith a sliding buffer"]
+        F1C["OR: document EWMA explicitly\nand train the online model on EWMA features"]
+        F1A --> F1B
+        F1A --> F1C
+    end
+
+    subgraph FIX2["Fix 2: Enforce Freshness TTL"]
+        F2A["OnlineStore.get_features() checks computed_at"]
+        F2B["If age > FRESHNESS_TTL then raise StaleFeatureError"]
+        F2C["feature_api falls back to offline store\nor rejects the request"]
+        F2A --> F2B --> F2C
+    end
+
+    subgraph FIX3["Fix 3: Monitoring with Drift Detection"]
+        F3A["Add feature_drift_monitor()"]
+        F3B["Compare online vs offline feature distributions"]
+        F3C["Alert if mean delta > threshold (e.g. 15%)"]
+        F3D["Track P50/P95 of feature staleness age"]
+        F3A --> F3B --> F3C
+        F3A --> F3D
+    end
+
+    subgraph FIX4["Fix 4: Human Review Gate"]
+        F4A["Automated approval only if:<br/>feature_age < 1h<br/>online vs offline delta < 15%<br/>customer has > 30 days history"]
+        F4B["Otherwise queue for human review"]
+        F4A --> F4B
+    end
+
+    FIX1 --> FIX2 --> FIX3 --> FIX4
+```
+
+## Before vs. After Controls
+
+| Control | Before | After |
+|---|---|---|
+| **Feature Formula** | Divergent (Exact Mean vs. EWMA) | Unified (Same arithmetic logic) |
+| **Freshness Validation** | ❌ None (Stale data served silently) | ✅ Read-time verification (Age vs. TTL) |
+| **Monitoring Dashboard** | Latency & uptime only | Uptime, Latency, Staleness P95, Feature Drift |
+| **Top-up Process** | Automatic approval with zero fallback | Automated gate with fallback to manual review |
+
+---
+
+# Appendix: Execution Commands
+
+Run the following commands in the workspace root to reproduce these findings:
+
+```bash
+# 1. Setup environment and generate raw transaction data
+uv sync
+uv run generate-data
+
+# 2. Run both computation pipelines
+uv run batch-pipeline
+uv run streaming-pipeline
+
+# 3. Query features for a specific customer (verifies the delta)
+uv run query-features --customer-id C0001
+
+# 4. Check the serving health dashboard
+uv run monitor
+
+# 5. Run the integration test suite
+uv run pytest -v
+```
