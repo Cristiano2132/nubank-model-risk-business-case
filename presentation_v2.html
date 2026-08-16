@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
 <script>
   mermaid.initialize({
-    startOnLoad: true,
+    startOnLoad: false,
     theme: 'base',
     themeVariables: {
       primaryColor: '#e0f2fe',
@@ -785,6 +785,13 @@ function show(n){
   slides[cur].classList.add('active');
   document.getElementById('counter').textContent=(cur+1)+' / '+total;
   document.getElementById('progress-fill').style.width=((cur+1)/total*100)+'%';
+  
+  // Render mermaid diagrams if they haven't been rendered yet
+  const mermaids = slides[cur].querySelectorAll('.mermaid:not([data-processed="true"])');
+  if (mermaids.length > 0) {
+    mermaid.init(undefined, mermaids);
+  }
+  
   if(notesOpen) refreshNotes();
 }
 function next(){show(cur+1);}
