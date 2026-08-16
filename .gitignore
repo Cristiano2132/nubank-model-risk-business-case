@@ -40,4 +40,5 @@ _site/
 
 # Project scratch / temp
 .create_nb.py
-scratch/
+scratch/presentation_prep/
+presentation_prep
