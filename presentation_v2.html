@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compass — Independent Risk Assessment | Solara Digital Bank</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#e0f2fe',
+      primaryTextColor: '#1e293b',
+      primaryBorderColor: '#0072B2',
+      lineColor: '#64748b',
+      secondaryColor: '#fff7ed',
+      tertiaryColor: '#fef2f2',
+      edgeLabelBackground: '#f8fafc',
+      clusterBkg: '#f8fafc',
+      clusterBorder: '#cbd5e1',
+      titleColor: '#0f172a',
+      nodeBorder: '#94a3b8',
+      mainBkg: '#f8fafc',
+    },
+    flowchart: { curve: 'basis', padding: 16, htmlLabels: true },
+    sequence: { mirrorActors: false }
+  });
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#f0f4f8}
+body{font-family:'Inter',sans-serif;color:#1e293b}
+#progress{position:fixed;top:0;left:0;right:0;height:3px;background:#e2e8f0;z-index:500}
+#progress-fill{height:100%;background:linear-gradient(90deg,#0072B2,#56B4E9);transition:width .4s ease}
+#deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:52px 80px 60px;overflow:hidden;animation:slideIn .45s cubic-bezier(.22,1,.36,1)}
+.slide.active{display:flex}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.slide-cover{background:linear-gradient(140deg,#0a1628 0%,#0f2044 40%,#0d1a35 100%);justify-content:flex-end;padding-bottom:80px}
+.slide-section{background:linear-gradient(135deg,#f8fafc 0%,#f0f7ff 100%);justify-content:center;align-items:flex-start}
+.slide-light{background:#ffffff}
+.slide-dark{background:#0f172a}
+.slide-end{background:linear-gradient(140deg,#0a1628 0%,#0f2044 100%);justify-content:center;align-items:center;text-align:center}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#0072B2;margin-bottom:12px}
+.slide-cover .eyebrow,.slide-dark .eyebrow{color:#56B4E9}
+h1{font-size:52px;font-weight:800;letter-spacing:-1.5px;line-height:1.1;color:#0f172a;max-width:900px}
+h1.xl{font-size:64px}
+.slide-cover h1,.slide-end h1{color:#fff}
+.slide-dark h1{color:#f8fafc}
+h2{font-size:36px;font-weight:700;letter-spacing:-0.8px;line-height:1.2;color:#0f172a;margin-bottom:28px;max-width:1000px}
+.slide-section h2{font-size:48px;max-width:800px}
+.slide-dark h2{color:#f1f5f9}
+h3{font-size:19px;font-weight:700;color:#0f172a;margin-bottom:10px;letter-spacing:-0.2px}
+.slide-dark h3{color:#f1f5f9}
+p{font-size:16px;line-height:1.7;color:#475569;max-width:960px}
+.slide-dark p{color:#94a3b8}
+.lead{font-size:22px;line-height:1.6;color:#334155;max-width:860px}
+.slide-cover .lead{color:#94a3b8}
+.mono{font-family:'JetBrains Mono',monospace;font-size:0.9em}
+.body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:28px}
+.row{display:flex;gap:28px;align-items:stretch}
+.col{display:flex;flex-direction:column;gap:20px;flex:1}
+.col-2{flex:2}
+.card{background:#fff;border-radius:14px;padding:28px 30px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.card.accent-blue{border-top:4px solid #0072B2}
+.card.accent-red{border-top:4px solid #ef4444}
+.card.accent-amber{border-top:4px solid #f59e0b}
+.card.accent-green{border-top:4px solid #10b981}
+.card.accent-purple{border-top:4px solid #8b5cf6}
+.card.accent-slate{border-top:4px solid #64748b}
+.card.bg-red{background:#fff1f2;border-color:#fecdd3}
+.card.bg-amber{background:#fffbeb;border-color:#fde68a}
+.card.bg-green{background:#f0fdf4;border-color:#bbf7d0}
+.card.bg-blue{background:#eff6ff;border-color:#bfdbfe}
+.card.bg-dark{background:#0f172a;border-color:#1e293b}
+.card-icon{font-size:30px;margin-bottom:14px}
+.badge{display:inline-block;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-amber{background:#fef3c7;color:#92400e}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.chip{display:inline-flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:8px 18px;font-size:14px;font-weight:600;color:#334155}
+.code{background:#0f172a;border-radius:10px;padding:20px 24px;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.7;color:#e2e8f0;white-space:pre}
+.code-title{font-size:11px;color:#64748b;letter-spacing:2px;font-weight:700;margin-bottom:10px;text-transform:uppercase}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat .val{font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1}
+.stat .lbl{font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px}
+.verdict{border-radius:16px;padding:28px 32px;display:flex;align-items:flex-start;gap:20px}
+.verdict-pause{background:#fff1f2;border:2px solid #ef4444}
+.verdict-proceed{background:#f0fdf4;border:2px solid #10b981}
+.verdict-conditions{background:#fffbeb;border:2px solid #f59e0b}
+.verdict-icon{font-size:44px;line-height:1;flex-shrink:0}
+.verdict-title{font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px}
+.verdict-pause .verdict-title{color:#9f1239}
+.verdict-proceed .verdict-title{color:#065f46}
+.verdict-conditions .verdict-title{color:#92400e}
+.verdict-pause p{color:#881337}
+.verdict-proceed p{color:#064e3b}
+.verdict-conditions p{color:#78350f}
+.mermaid-wrap{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:220px;overflow:hidden}
+.mermaid-wrap .mermaid{width:100%;max-width:100%}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0}
+th{background:#1e293b;color:#f8fafc;padding:12px 18px;text-align:left;font-weight:600;font-size:12.5px;letter-spacing:.5px}
+td{padding:12px 18px;border-bottom:1px solid #f1f5f9;color:#334155;background:#fff;vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#f8fafc}
+.gate-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.gate-list li{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;font-size:14px;color:#334155;line-height:1.5}
+.gate-num{min-width:24px;height:24px;border-radius:50%;background:#0072B2;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.blist{list-style:none;display:flex;flex-direction:column;gap:12px}
+.blist li{display:flex;gap:12px;font-size:15px;color:#334155;line-height:1.6}
+.blist li .dot{width:7px;height:7px;border-radius:50%;background:#0072B2;margin-top:7px;flex-shrink:0}
+.footer{position:absolute;bottom:0;left:0;right:0;padding:14px 80px;display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;border-top:1px solid rgba(0,0,0,.06);background:inherit}
+.slide-cover .footer,.slide-dark .footer,.slide-end .footer{border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.25);background:transparent}
+#notes{position:fixed;bottom:0;left:0;right:0;max-height:240px;overflow-y:auto;background:#0c1322;color:#e2e8f0;padding:18px 80px;font-size:15px;line-height:1.7;z-index:400;border-top:3px solid #0072B2;display:none;box-shadow:0 -16px 40px rgba(0,0,0,.3)}
+#notes.on{display:block}
+.notes-bar{font-size:11px;color:#475569;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between}
+.notes-bar button{background:none;border:none;color:#475569;cursor:pointer;padding:0;font-family:inherit;font-size:12px}
+#nav{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.93);backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,.08);border-radius:999px;padding:7px 14px;box-shadow:0 4px 20px rgba(0,0,0,.1);transition:bottom .3s ease}
+#nav.notes-on{bottom:258px}
+.nav-btn{background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:#475569;cursor:pointer;padding:7px 14px;border-radius:999px;transition:all .2s}
+.nav-btn:hover{background:#f1f5f9;color:#0f172a}
+.nav-btn.primary{background:#0072B2;color:#fff;box-shadow:0 2px 6px rgba(0,114,178,.3)}
+.nav-btn.primary:hover{background:#005b8e}
+.nav-sep{width:1px;height:20px;background:#e2e8f0}
+#counter{font-size:13px;font-weight:700;color:#94a3b8;min-width:52px;text-align:center}
+</style>
+</head>
+<body>
+<div id="progress"><div id="progress-fill"></div></div>
+<div id="deck">
+
+<!-- SLIDE 01 — COVER -->
+<div class="slide slide-cover active"
+  data-notes="Introdução (5 min). Enfatize: (1) você não apenas leu a documentação — clonou o repo, rodou o pipeline do início ao fim, e deixou o comportamento observado do sistema guiar o seu julgamento; (2) todos os números que você vai apresentar são de observações diretas do sistema live; (3) sua avaliação é empírica, não especulativa. Esta é a diferença entre uma revisão de risco real e uma lista de checklist genérica.">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:60px;max-width:840px">
+    <div class="eyebrow">Solara Digital Bank · Model Risk · IC5 Interview</div>
+    <h1 class="xl" style="margin:20px 0 28px">Compass Feature Pipeline<br>Risk Assessment</h1>
+    <p class="lead">An evidence-based evaluation of infrastructure risks — grounded in hands-on system validation.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:40px">
+      <span class="chip" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#e2e8f0">📦 Feature Store</span>
+      <span class="chip" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#e2e8f0">🔬 Model Risk Specialist (IC5)</span>
+      <span class="chip" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#e2e8f0">📅 2026</span>
+    </div>
+  </div>
+  <div class="footer"><span>Confidential · Interview Deliverable</span><span>1 / 19</span></div>
+</div>
+
+<!-- SLIDE 02 — AGENDA -->
+<div class="slide slide-light"
+  data-notes="Agenda em 30 segundos. Cada seção termina com uma posição ou recomendação acionável, não apenas uma lista de riscos. A ordem é deliberada: começa-se pela evidência hands-on (seção Context), depois diagnóstico de risco, depois posição e remediação.">
+  <div class="eyebrow">Overview</div>
+  <h2>What we will cover</h2>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="card accent-blue"><div class="card-icon">🏗️</div><h3>Context</h3><p>What Compass is, how it works, and what I did to validate it — before drawing any conclusions.</p></div>
+        <div class="card accent-red"><div class="card-icon">🗺️</div><h3>Risk Landscape</h3><p>The 2 material infrastructure risks I observed running the live system — and what I deliberately excluded.</p></div>
+      </div>
+      <div class="col">
+        <div class="card accent-amber"><div class="card-icon">⚖️</div><h3>Position on Changes</h3><p>A concrete, reasoned verdict on each proposed change. PAUSE vs. Proceed with Conditions.</p></div>
+        <div class="card accent-green"><div class="card-icon">🏛️</div><h3>Governance at Scale</h3><p>3 foundational controls and a Data Mesh framework that works across teams with uneven maturity.</p></div>
+      </div>
+    </div>
+    <div class="card bg-blue" style="padding:16px 22px">
+      <p><strong>Methodology:</strong> All findings are grounded in empirical evidence — I cloned <span class="mono" style="background:#dbeafe;padding:2px 6px;border-radius:4px;color:#1e40af">compass-feature-pipeline</span>, ran both batch and streaming paths, and queried the SQLite stores directly. No finding is abstract.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment</span><span>2 / 19</span></div>
+</div>
+
+<!-- SLIDE 03 — SYSTEM OVERVIEW (ARCHITECTURE.MD §1) -->
+<div class="slide slide-light"
+  data-notes="Para audiência não-técnica: o Compass é uma Feature Store — um sistema especializado que computa e serve atributos de clientes para modelos de crédito. Tem dois caminhos de dados paralelos. O monitoring atual só verifica se a API está respondendo — não verifica a qualidade do dado que está sendo servido.">
+  <div class="eyebrow">Context · System Architecture</div>
+  <h2>What is Compass?</h2>
+  <div class="body">
+    <div class="mermaid-wrap" style="min-height:250px">
+      <div class="mermaid">
+graph TB
+    subgraph Inputs["📥 Inputs"]
+        TXN["transactions.csv\n(32,929 rows · 300 customers)"]
+    end
+    subgraph Pipelines["⚙️ Feature Pipelines"]
+        BATCH["Batch Pipeline\n(nightly · full recompute)"]
+        STREAM["Streaming Pipeline\n(incremental · event-by-event)"]
+    end
+    subgraph Stores["🗄️ Feature Stores — SQLite"]
+        OFFLINE["Offline Store\noffline_store.db"]
+        ONLINE["Online Store\nonline_store.db"]
+    end
+    subgraph API["🔌 Feature API"]
+        FAPI["feature_api.py"]
+    end
+    subgraph Consumers["🏦 Downstream Models"]
+        UNDER["Underwriting\n(batch · full review)"]
+        INAPP["In-App Credit Line\n(near-real-time · automated)"]
+    end
+    subgraph Mon["📊 Monitoring"]
+        DASH["dashboard.py\nuptime + avg latency only"]
+    end
+    TXN --> BATCH & STREAM
+    BATCH -->|"exact 30d mean"| OFFLINE
+    STREAM -->|"EWMA α=0.2"| ONLINE
+    OFFLINE & ONLINE --> FAPI
+    FAPI --> UNDER & INAPP & DASH
+      </div>
+    </div>
+    <div class="row" style="gap:16px">
+      <div class="card bg-blue" style="flex:1;padding:14px 18px"><p><strong>Batch:</strong> Nightly full recompute. Exact arithmetic mean over 30-day window.</p></div>
+      <div class="card bg-amber" style="flex:1;padding:14px 18px"><p><strong>Streaming:</strong> Incremental per event. EWMA α=0.2 — a recency-biased exponential smoother.</p></div>
+      <div class="card bg-red" style="flex:1;padding:14px 18px"><p><strong>Monitoring:</strong> API uptime &amp; latency only. No data quality checks whatsoever.</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Context</span><span>3 / 19</span></div>
+</div>
+
+<!-- SLIDE 04 — BATCH PATH (ARCHITECTURE.MD §3) -->
+<div class="slide slide-light"
+  data-notes="O caminho batch é matematicamente correto: computa a média aritmética exata de 30 dias. É o dado que foi usado para treinar os modelos de crédito. Ponto-chave: ele é reproduzível e preciso, mas caro (full table scan) e lento (nightly). Incompatível com decisões em real-time — por isso o Streaming foi construído.">
+  <div class="eyebrow">Context · Batch Path</div>
+  <h2>Batch Pipeline — Exact 30-day Mean</h2>
+  <div class="body">
+    <div class="mermaid-wrap" style="min-height:200px">
+      <div class="mermaid">
+flowchart LR
+    A["transactions.csv"] -->|read_csv| B["DataFrame\n(all 32,929 rows)"]
+    B -->|"filter: last 30d\nfrom as_of"| C["Windowed DataFrame\nper customer"]
+    C -->|"groupby customer_id\n.mean()"| D["Dict: customer_id to avg"]
+    D -->|for each customer| E["OfflineStore\n.write_features()"]
+    E -->|"INSERT OR REPLACE"| F[("offline_store.db\nPK: customer_id, as_of, feature_name")]
+      </div>
+    </div>
+    <div class="row">
+      <div class="card bg-green col" style="padding:18px 22px">
+        <h3 style="color:#166534;font-size:16px">✅ Strengths</h3>
+        <ul class="blist" style="margin-top:8px;gap:8px">
+          <li><div class="dot"></div>Exact arithmetic mean — reproducible and precise</li>
+          <li><div class="dot"></div>Point-in-time safe (keyed by <span class="mono">as_of</span>, preserves history)</li>
+          <li><div class="dot"></div>The source of truth used for model training</li>
+        </ul>
+      </div>
+      <div class="card bg-red col" style="padding:18px 22px">
+        <h3 style="color:#991b1b;font-size:16px">❌ Limitations</h3>
+        <ul class="blist" style="margin-top:8px;gap:8px">
+          <li><div class="dot" style="background:#ef4444"></div>Expensive: full table scan on every run</li>
+          <li><div class="dot" style="background:#ef4444"></div>Nightly cadence → hours-old data at serving time</li>
+          <li><div class="dot" style="background:#ef4444"></div>Cannot support real-time credit decisions — hence streaming was built</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Context</span><span>4 / 19</span></div>
+</div>
+
+<!-- SLIDE 05 — STREAMING PATH (ARCHITECTURE.MD §4) -->
+<div class="slide slide-light"
+  data-notes="O streaming usa uma matemática completamente diferente: EWMA com alpha=0.2. O EWMA é um suavizador exponencial que pondera valores recentes muito mais do que histórico. Para um cliente que gastou muito recentemente, o EWMA será MAIOR que a média exata. Para um cliente inativo, será MENOR. Nenhum é errado em isolamento — mas usar um para treino e outro para inferência é uma violação fundamental de governança de modelo.">
+  <div class="eyebrow">Context · Streaming Path</div>
+  <h2>Streaming Pipeline — EWMA Smoother</h2>
+  <div class="body">
+    <div class="mermaid-wrap" style="min-height:200px">
+      <div class="mermaid">
+flowchart LR
+    A["transactions.csv"] -->|sort by timestamp| B["Ordered Events\nwith seq index"]
+    B -->|"resume from\nlast_processed_seq"| C["Pending Events\nstart_seq onwards"]
+    C -->|batches of 50| D{"customer_id\nin running_avg?"}
+    D -->|Yes| E["EWMA Update\n0.2 × amount + 0.8 × prev"]
+    D -->|No| F["Seed\nrunning_avg = amount"]
+    E & F --> G["OnlineStore\n.upsert_feature()"]
+    G -->|"UPDATE value, computed_at"| H[("online_store.db\nPK: customer_id, feature_name")]
+    G -->|UPDATE| I[("pipeline_state\nlast_processed_seq")]
+      </div>
+    </div>
+    <div class="row">
+      <div class="card bg-green col" style="padding:18px 22px">
+        <h3 style="color:#166534;font-size:16px">✅ Strengths</h3>
+        <ul class="blist" style="margin-top:8px;gap:8px">
+          <li><div class="dot"></div>Fast: O(1) per event, no full table scan</li>
+          <li><div class="dot"></div>Incremental: resumes from last position via pipeline_state</li>
+        </ul>
+      </div>
+      <div class="card bg-red col" style="padding:18px 22px">
+        <h3 style="color:#991b1b;font-size:16px">❌ Critical Issues</h3>
+        <ul class="blist" style="margin-top:8px;gap:8px">
+          <li><div class="dot" style="background:#ef4444"></div><strong>Approximate:</strong> EWMA ≠ 30d arithmetic mean</li>
+          <li><div class="dot" style="background:#ef4444"></div><strong>Order-sensitive:</strong> result changes with event arrival order</li>
+          <li><div class="dot" style="background:#ef4444"></div><strong>Silent staleness:</strong> <span class="mono">FRESHNESS_TTL</span> defined in config, never enforced at read</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Context</span><span>5 / 19</span></div>
+</div>
+
+<!-- SLIDE 06 — RISK LANDSCAPE (section break) -->
+<div class="slide slide-section"
+  data-notes="Transição. Após entender a arquitetura, rodei o sistema e observei o que acontece empiricamente. O que segue não é hipotético — são os resultados de queries diretas nas bases SQLite que o Compass cria.">
+  <div style="position:absolute;right:80px;top:60px;font-size:120px;font-weight:900;color:rgba(15,114,178,.06);line-height:1">01</div>
+  <div class="eyebrow">Section 01</div>
+  <h2 style="font-size:48px">Risk Landscape<br><span style="color:#94a3b8;font-weight:400">What I found running the system</span></h2>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:40px;max-width:680px">
+    <div style="display:flex;gap:14px;align-items:center;background:#fff;border-radius:12px;padding:14px 20px;border:1px solid #fecdd3">
+      <span style="font-size:22px">🔴</span>
+      <p style="font-size:16px;margin:0;color:#0f172a"><strong>Risk 1:</strong> Training/Serving Skew — two paths compute different math for the same feature</p>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;background:#fff;border-radius:12px;padding:14px 20px;border:1px solid #fde68a">
+      <span style="font-size:22px">🟠</span>
+      <p style="font-size:16px;margin:0;color:#0f172a"><strong>Risk 2:</strong> Silent Staleness — TTL defined in config, never enforced at read time</p>
+    </div>
+  </div>
+  <div class="footer" style="background:transparent"><span>Compass Risk Assessment · Risk Landscape</span><span>6 / 19</span></div>
+</div>
+
+<!-- SLIDE 07 — RISK 1: SKEW DIAGRAM (ARCHITECTURE.MD §8) -->
+<div class="slide slide-light"
+  data-notes="Este diagrama (do ARCHITECTURE.md) resume o problema: o modelo aprende pesos usando a média exata de 30 dias (Offline), mas faz inferência com EWMA (Online). Para C0001: 142 no batch vs 77 no streaming — 46% de divergência. 14% dos clientes na amostra teriam uma decisão de crédito diferente dependendo de qual store é lido. Isso não é um risco hipotético — é o resultado de rodar o sistema.">
+  <div class="eyebrow">Risk 1 — Critical · Training/Serving Skew</div>
+  <h2>The pipeline is mathematically inconsistent</h2>
+  <div class="body">
+    <div class="mermaid-wrap" style="min-height:240px">
+      <div class="mermaid">
+graph TB
+    subgraph Training["Model Training — Underwriting"]
+        T1["Training Source:\nOffline Store"] --> T2["Feature: txn_amount_avg_30d\n= EXACT 30-day arithmetic mean"] --> T3["Model learns weights\nagainst EXACT distribution"]
+    end
+    subgraph Serving["Model Serving — In-App Real-Time"]
+        S1["Serving Source:\nOnline Store"] --> S2["Feature: txn_amount_avg_30d\n= EWMA α=0.2 — exponential smoother"] --> S3["Model receives EWMA values\na DIFFERENT distribution"]
+    end
+    subgraph Impact["Consequence"]
+        I1["Training/Serving Skew\nhidden covariate shift"]
+        I2["Model scores miscalibrated\nfor real-time credit decisions"]
+    end
+    T3 & S3 -->|"SKEW"| I1 --> I2
+      </div>
+    </div>
+    <div class="row" style="gap:20px">
+      <div class="card bg-dark col" style="padding:20px 24px">
+        <div class="code-title" style="color:#475569">▷ query-features --customer-id C0001</div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #1e293b;padding-bottom:10px;margin-bottom:10px">
+          <span style="color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:13px">Offline (batch)</span>
+          <span style="color:#34d399;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">142.41</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:13px">Online (streaming)</span>
+          <span style="color:#f87171;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">76.82</span>
+        </div>
+      </div>
+      <div class="col" style="justify-content:center;gap:20px">
+        <div class="stat" style="color:#ef4444"><div class="val">46%</div><div class="lbl">Value delta — same feature, same customer</div></div>
+        <div class="stat" style="color:#334155"><div class="val" style="font-size:36px">14%</div><div class="lbl">Customers with a different credit decision by serving path</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Risk 1</span><span>7 / 19</span></div>
+</div>
+
+<!-- SLIDE 08 — RISK 2: SILENT STALENESS -->
+<div class="slide slide-light"
+  data-notes="O segundo risco é igualmente silencioso. O config.py define FRESHNESS_TTL = timedelta(hours=6), mas online_store.py nunca importa nem usa essa constante. O monitoring só olha latência da API — não computed_at vs now(). Ponto narrativo forte: o ticket de suporte sobre 'crédito baseado em padrão desatualizado' é exatamente isso. Sistema serviu features velhas silenciosamente e o dashboard reportou 100% de uptime.">
+  <div class="eyebrow">Risk 2 — High · Silent Staleness</div>
+  <h2>FRESHNESS_TTL defined, never enforced</h2>
+  <div class="body">
+    <div class="row">
+      <div class="col col-2" style="gap:14px">
+        <div class="row" style="gap:14px">
+          <div class="code" style="flex:1;font-size:13px"><div class="code-title">config.py</div><span style="color:#64748b"># TTL defined here...</span>
+FRESHNESS_TTL = timedelta(hours=<span style="color:#fbbf24">6</span>)</div>
+          <div class="code" style="flex:1;font-size:13px"><div class="code-title">online_store.py — get_features()</div><span style="color:#64748b"># TTL never imported or checked</span>
+cursor.execute(<span style="color:#34d399">"""
+  SELECT feature_name, value, computed_at
+  FROM online_features
+  WHERE customer_id = ?
+"""</span>, [customer_id])
+<span style="color:#64748b"># Returns stale data silently</span></div>
+        </div>
+        <div class="row" style="gap:14px">
+          <div class="card bg-green" style="flex:1;padding:14px 18px">
+            <h3 style="color:#166534;font-size:15px">✅ Dashboard reports</h3>
+            <p style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#166534;margin-top:6px">Uptime: 100%<br>Avg latency: 0.29ms</p>
+          </div>
+          <div class="card bg-red" style="flex:1;padding:14px 18px">
+            <h3 style="color:#991b1b;font-size:15px">❌ Dashboard never reports</h3>
+            <p style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#991b1b;margin-top:6px">Staleness rate: [SILENT]<br>Feature age P95: [SILENT]<br>Freshness breach: [SILENT]</p>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="gap:14px">
+        <div class="card accent-red">
+          <h3>Root Cause</h3>
+          <p><span class="mono">FRESHNESS_TTL</span> is never imported in <span class="mono">online_store.py</span>. The read path is a blind SQL SELECT with no age check whatsoever.</p>
+        </div>
+        <div class="card bg-amber" style="padding:20px 24px">
+          <h3 style="color:#b45309">Known Incident</h3>
+          <p style="color:#78350f">The support ticket about "credit adjustment reflecting outdated transaction patterns with no system errors" maps precisely to this. Stale features served silently while dashboard reported green.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Risk 2</span><span>8 / 19</span></div>
+</div>
+
+<!-- SLIDE 09 — RISK SUMMARY -->
+<div class="slide slide-light"
+  data-notes="Resumo para audiência mista. Destaque: estou intencionalmente excluindo riscos genéricos (latência, volume, drift genérico). Os riscos materiais em Compass são sistêmicos, silenciosos e específicos de Feature Store. Todos foram observados empiricamente, não inferidos.">
+  <div class="eyebrow">Risk Landscape — Summary</div>
+  <h2>Material vs. Generic Risk — What I prioritized and why</h2>
+  <div class="body">
+    <table>
+      <thead><tr><th>Risk</th><th>Severity</th><th>Root Cause</th><th>Business Impact</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Training/Serving Skew</strong></td><td><span class="badge badge-red">Critical</span></td><td>Batch: <span class="mono">mean()</span> · Streaming: EWMA α=0.2 · Different math, same feature name</td><td>14% customers → different credit decision by serving path. Explainability violation.</td></tr>
+        <tr><td><strong>Silent Staleness</strong></td><td><span class="badge badge-red">High</span></td><td><span class="mono">FRESHNESS_TTL</span> defined in config, never imported in <span class="mono">online_store.py</span></td><td>Real-time credit served on indefinitely stale features with no alert.</td></tr>
+        <tr><td><strong>Blind Monitoring</strong></td><td><span class="badge badge-amber">High</span></td><td><span class="mono">dashboard.py</span> checks API uptime/latency only</td><td>Masks both risks above. System appears healthy during active silent degradation.</td></tr>
+        <tr><td><strong>Blast Radius</strong></td><td><span class="badge badge-amber">High</span></td><td>No feature versioning, no canary, no rollback playbook</td><td>One bad deploy affects all downstream credit models simultaneously.</td></tr>
+      </tbody>
+    </table>
+    <div class="card bg-blue" style="padding:16px 22px">
+      <p><strong>What I deliberately excluded:</strong> Generic pipeline latency, volume scaling, infrastructure reliability — standard operational concerns, not the material feature-store-specific risks that matter here.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Risk Summary</span><span>9 / 19</span></div>
+</div>
+
+<!-- SLIDE 10 — ASSESSMENT APPROACH (section break) -->
+<div class="slide slide-section"
+  data-notes="O que eu verificaria em uma revisão formal e independente? Cinco pilares, todos com critérios de pass/fail pré-definidos. A diferença de uma revisão séria: os thresholds são definidos ANTES de rodar o teste, não após observar os resultados.">
+  <div style="position:absolute;right:80px;top:60px;font-size:120px;font-weight:900;color:rgba(15,114,178,.06);line-height:1">02</div>
+  <div class="eyebrow">Section 02</div>
+  <h2 style="font-size:48px">Assessment Approach</h2>
+  <p style="font-size:19px;color:#64748b;margin-top:14px;max-width:600px">How I would conduct a formal independent review and what "fit for purpose" means in practice.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:36px;max-width:800px">
+    <span class="chip">P1 Offline/Online Parity</span>
+    <span class="chip">P2 Drift Detection</span>
+    <span class="chip">P3 Deploy Safety</span>
+    <span class="chip">P4 Data Quality</span>
+    <span class="chip">P5 Governance Coverage</span>
+  </div>
+  <div class="footer" style="background:transparent"><span>Compass Risk Assessment · Assessment</span><span>10 / 19</span></div>
+</div>
+
+<!-- SLIDE 11 — P1+P2 -->
+<div class="slide slide-light"
+  data-notes="P1 Paridade: computar cada feature nos dois caminhos e comparar com KS test + PSI. Threshold de PASS pré-definido antes de rodar. Compass já falha: PSI=0.08 (borderline), p=0.002. P2 Drift: janela deslizante de 30 dias com RAG thresholds. O importante: thresholds são definidos antes do teste, não calibrados para fazer o sistema passar.">
+  <div class="eyebrow">Assessment — P1 &amp; P2</div>
+  <h2>Parity Tests · Drift Detection</h2>
+  <div class="body">
+    <div class="row">
+      <div class="col" style="gap:14px">
+        <div class="card accent-blue"><h3>P1 — Offline/Online Parity</h3><p>Compute every feature via both paths. Compare with KS-test + PSI. Thresholds pre-defined.</p></div>
+        <div class="code" style="font-size:13px"><div class="code-title">Parity Pass Criteria</div><span style="color:#94a3b8">psi</span> = compute_psi(offline_vals, online_vals)
+<span style="color:#94a3b8">ks_p</span> = ks_2samp(offline, online).pvalue
+<span style="color:#94a3b8">delta</span> = mean(abs(off-on)/off * <span style="color:#fbbf24">100</span>)
+
+<span style="color:#34d399">PASS</span> <span style="color:#64748b">if:</span> psi &lt; <span style="color:#fbbf24">0.10</span> <span style="color:#64748b">and</span>
+        ks_p &gt; <span style="color:#fbbf24">0.05</span> <span style="color:#64748b">and</span>
+        delta &lt; <span style="color:#fbbf24">5</span></div>
+        <div class="card bg-amber" style="padding:14px 18px"><p><strong>Compass:</strong> PSI=0.08 (AMBER borderline), p=0.002 → <strong>FAIL</strong>. 14% decision flip rate.</p></div>
+      </div>
+      <div class="col" style="gap:14px">
+        <div class="card accent-green"><h3>P2 — Drift Detection</h3><p>Sliding window PSI vs. 30-day baseline. Thresholds define action — not observation.</p></div>
+        <div class="card" style="padding:18px 22px">
+          <h3 style="margin-bottom:14px">RAG Thresholds</h3>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:12px;align-items:center;padding:9px 12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0"><span class="badge badge-green">GREEN</span><p style="margin:0;font-size:13px">PSI 0–0.10 → Stable. No action.</p></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:9px 12px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a"><span class="badge badge-amber">AMBER</span><p style="margin:0;font-size:13px">PSI 0.10–0.25 → Investigate within 24h.</p></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:9px 12px;background:#fff1f2;border-radius:8px;border:1px solid #fecdd3"><span class="badge badge-red">RED</span><p style="margin:0;font-size:13px">PSI &gt;0.25 → Auto-alert. Block T1 serving.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Assessment</span><span>11 / 19</span></div>
+</div>
+
+<!-- SLIDE 12 — P3+P4+P5 -->
+<div class="slide slide-light"
+  data-notes="P3 Deploy Safety: simular um deploy problemático e medir MTTR. P4 Data Quality: nulos, staleness, ranges de valor. P5 Governance: owners, contratos, SLAs. Se nenhuma feature T1 tiver os 3 itens de P5, isso sozinho é um finding crítico. Compass falha nos 3 pillars atualmente.">
+  <div class="eyebrow">Assessment — P3, P4 &amp; P5</div>
+  <h2>Deploy Safety · Data Quality · Governance</h2>
+  <div class="body">
+    <div class="row">
+      <div class="card col accent-amber">
+        <div class="card-icon">🚀</div><h3>P3 — Deploy Safety</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot"></div>Shadow mode (7d parallel run)</li>
+          <li><div class="dot"></div>Parity gate in CI (&lt;5% delta)</li>
+          <li><div class="dot"></div>Rollback playbook tested</li>
+          <li><div class="dot"></div>MTTR SLA &lt;15 min</li>
+        </ul>
+        <div style="background:#fffbeb;border-radius:8px;padding:8px 12px;margin-top:14px"><p style="font-size:12px;color:#b45309;font-weight:700">Compass today: 0/4 ✗</p></div>
+      </div>
+      <div class="card col accent-purple">
+        <div class="card-icon">🧹</div><h3>P4 — Data Quality</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot" style="background:#8b5cf6"></div>Null rate per feature (&lt;1%)</li>
+          <li><div class="dot" style="background:#8b5cf6"></div>Value range violations</li>
+          <li><div class="dot" style="background:#8b5cf6"></div>Staleness rate (%&gt;TTL)</li>
+          <li><div class="dot" style="background:#8b5cf6"></div>Freshness SLA compliance</li>
+        </ul>
+        <div style="background:#faf5ff;border-radius:8px;padding:8px 12px;margin-top:14px"><p style="font-size:12px;color:#7e22ce;font-weight:700">None monitored today ✗</p></div>
+      </div>
+      <div class="card col accent-slate">
+        <div class="card-icon">🏛️</div><h3>P5 — Governance</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot" style="background:#64748b"></div>Feature owner identified</li>
+          <li><div class="dot" style="background:#64748b"></div>Contract: formula, version</li>
+          <li><div class="dot" style="background:#64748b"></div>Freshness SLA by tier</li>
+          <li><div class="dot" style="background:#64748b"></div>Lineage: <span class="mono">git_sha</span>, <span class="mono">run_id</span></li>
+        </ul>
+        <div style="background:#f8fafc;border-radius:8px;padding:8px 12px;margin-top:14px"><p style="font-size:12px;color:#475569;font-weight:700">No registry, no contracts ✗</p></div>
+      </div>
+    </div>
+    <div class="card bg-red" style="padding:16px 22px">
+      <p><strong>Fit-for-purpose verdict:</strong> Compass is not fit for real-time autonomous credit decisions today. P3, P4, and P5 all fail. A remediation plan is required before any expansion of scope.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Assessment</span><span>12 / 19</span></div>
+</div>
+
+<!-- SLIDE 13 — POSITION: SECTION BREAK -->
+<div class="slide slide-section"
+  data-notes="A seção mais importante para o painel. Aqui é onde se diferencia uma avaliação séria: tomar uma posição razoada e específica sobre cada mudança, não apenas listar prós e contras. Vou ser direto sobre a tensão entre velocidade e governança — sem resolver essa tensão de forma artificial.">
+  <div style="position:absolute;right:80px;top:60px;font-size:120px;font-weight:900;color:rgba(15,114,178,.06);line-height:1">03</div>
+  <div class="eyebrow">Section 03</div>
+  <h2 style="font-size:48px">Position on<br>Proposed Changes</h2>
+  <p style="font-size:19px;color:#64748b;margin-top:14px;max-width:600px">A concrete, independent verdict on each change — specific, reasoned, and honest about the speed-governance tension.</p>
+  <div style="display:flex;gap:18px;margin-top:36px;max-width:800px">
+    <div style="flex:1;background:#fff1f2;border:2px solid #ef4444;border-radius:14px;padding:22px 26px">
+      <div style="font-size:26px;font-weight:900;color:#9f1239">PAUSE</div>
+      <p style="color:#881337;margin-top:6px;font-size:15px">Change 1 — Real-time automated top-ups</p>
+    </div>
+    <div style="flex:1;background:#fffbeb;border:2px solid #f59e0b;border-radius:14px;padding:22px 26px">
+      <div style="font-size:20px;font-weight:900;color:#92400e;line-height:1.2">PROCEED<br>WITH CONDITIONS</div>
+      <p style="color:#78350f;margin-top:6px;font-size:15px">Change 2 — Lighter review for feature code</p>
+    </div>
+  </div>
+  <div class="footer" style="background:transparent"><span>Compass Risk Assessment · Position on Changes</span><span>13 / 19</span></div>
+</div>
+
+<!-- SLIDE 14 — CHANGE 1: PAUSE -->
+<div class="slide slide-light"
+  data-notes="PAUSE não significa 'nunca'. Significa 'resolva isso primeiro, depois automatizamos com confiança'. Os 4 gates são concretos e alcançáveis em 3-4 semanas. Para o time de produto: a automação que vocês querem é possível e desejável — mas precisamos de alicerces sólidos primeiro. Isso não é burocracia — é o que torna a velocidade sustentável e auditável.">
+  <div class="eyebrow">Change 1 — Real-time top-ups, no human review</div>
+  <h2>Position: <span style="color:#ef4444">PAUSE</span></h2>
+  <div class="body">
+    <div class="verdict verdict-pause">
+      <div class="verdict-icon">🛑</div>
+      <div>
+        <div class="verdict-title">PAUSE — Remediation Required First</div>
+        <p>Automating financial decisions on data that is provably skewed (46% delta) and silently stale creates unacceptable regulatory and credit risk. We cannot govern our way out of a math problem after the fact.</p>
+      </div>
+    </div>
+    <div>
+      <h3 style="color:#64748b;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Required Gates to Unlock — Estimated 3–4 Weeks</h3>
+      <ul class="gate-list">
+        <li><div class="gate-num">1</div><div><strong>Reconcile formula divergence</strong> — Unify batch and streaming logic. Confirm parity PSI &lt;0.05 over 7-day shadow run before any production traffic.</div></li>
+        <li><div class="gate-num">2</div><div><strong>Enforce TTL at read path</strong> — Add freshness check in <span class="mono">online_store.get_features()</span>. Alert on breach. Confirm &lt;1% staleness rate in prod.</div></li>
+        <li><div class="gate-num">3</div><div><strong>Deploy feature-quality KRI dashboard</strong> — PSI, staleness, parity delta visible and alerting before go-live.</div></li>
+        <li><div class="gate-num">4</div><div><strong>Validate rollback playbook</strong> — Fire drill completed. MTTR &lt;15 min confirmed.</div></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Change 1</span><span>14 / 19</span></div>
+</div>
+
+<!-- SLIDE 15 — CHANGE 2: PROCEED -->
+<div class="slide slide-light"
+  data-notes="Engage com a tensão: o argumento pelo review mais leve é legítimo. Revisões manuais são lentas, inconsistentes e não escaláveis. A proposta é substituir burocracia humana por automação rigorosa — não por ausência de controle. Resultado esperado: 5-7 dias → 1-2 dias, com cobertura de testes superior à revisão manual. Essa é a resposta certa para o trade-off: governe melhor AND mova-se mais rápido.">
+  <div class="eyebrow">Change 2 — Lighter review for feature transformation code</div>
+  <h2>Position: <span style="color:#f59e0b">Proceed with Conditions</span></h2>
+  <div class="body">
+    <div class="verdict verdict-conditions">
+      <div class="verdict-icon">🟡</div>
+      <div>
+        <div class="verdict-title">PROCEED WITH CONDITIONS</div>
+        <p>The speed argument is legitimate. Manual reviews are a bottleneck with inconsistent coverage. We can move faster <em>and</em> govern better — by replacing slow human checks with rigorous automated parity gates in CI.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col" style="gap:10px">
+        <h3 style="color:#64748b;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Required Automated Gates</h3>
+        <ul class="gate-list">
+          <li><div class="gate-num">1</div><div><strong>Parity test in CI</strong> — Every merge triggers parity suite. &lt;5% delta = hard block.</div></li>
+          <li><div class="gate-num">2</div><div><strong>PSI gate at deploy</strong> — Before/after distribution comparison. PSI &gt;0.10 blocks deployment.</div></li>
+          <li><div class="gate-num">3</div><div><strong>Shadow deploy for T1 changes</strong> — 7-day parallel run before cutover.</div></li>
+          <li><div class="gate-num">4</div><div><strong>Rollback SLA</strong> — Documented and tested. MTTR &lt;15 min.</div></li>
+        </ul>
+      </div>
+      <div class="col" style="gap:14px">
+        <div class="card bg-green"><h3>Expected Outcome</h3><p>Review cycle: <strong style="color:#059669">5–7 days → 1–2 days</strong> for most changes, with higher automated test coverage than today's manual process.</p></div>
+        <div class="card bg-blue"><h3>Framing for Teams</h3><p>Frame as acceleration, not governance. The gates are the prerequisite for speed, not the opposite. Teams with GREEN KRIs ship faster.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Change 2</span><span>15 / 19</span></div>
+</div>
+
+<!-- SLIDE 16 — PROPOSED FIXES (ARCHITECTURE.MD §10) -->
+<div class="slide slide-light"
+  data-notes="Para audiência técnica: o before/after mostra como corrigir os problemas. As quatro fixes são diretas. Fix 1: Extrair função compartilhada ou documentar explicitamente que o modelo online usa EWMA e retreinar com isso. Fix 2: Adicionar TTL check em get_features(). Fix 3: Monitoramento de drift. Fix 4: Automação condicional com fallback para revisão humana.">
+  <div class="eyebrow">Governance · Solution Architecture</div>
+  <h2>Before vs. After — Proposed Remediation</h2>
+  <div class="body">
+    <div class="mermaid-wrap" style="min-height:260px">
+      <div class="mermaid">
+graph LR
+    subgraph BEFORE["Current State"]
+        B1["Batch: exact mean\nOnline: EWMA\ndifferent formulas"]
+        B2["Staleness: config 6h\nnever checked at read"]
+        B3["Monitoring: API uptime\nno feature quality"]
+        B4["Decision: automatic\nno guards"]
+    end
+    subgraph AFTER["Target State"]
+        A1["Unified feature definition\nSame math, same result"]
+        A2["TTL enforced at read time\nStaleFeatureError on expiry"]
+        A3["Drift monitor: online vs offline\nStaleness P95 alerting"]
+        A4["Auto-approval only if\nfreshness + parity pass"]
+    end
+    B1 -->|"Fix 1"| A1
+    B2 -->|"Fix 2"| A2
+    B3 -->|"Fix 3"| A3
+    B4 -->|"Fix 4"| A4
+      </div>
+    </div>
+    <div class="row" style="gap:14px">
+      <div class="card bg-blue" style="flex:1;padding:14px 18px"><p><strong>Fix 1:</strong> Extract shared <span class="mono">compute_txn_amount_avg_30d()</span> or train separate online model on EWMA explicitly.</p></div>
+      <div class="card bg-blue" style="flex:1;padding:14px 18px"><p><strong>Fix 2:</strong> Add <span class="mono">FRESHNESS_TTL</span> import and check in <span class="mono">OnlineStore.get_features()</span>. Raise or fall back.</p></div>
+      <div class="card bg-blue" style="flex:1;padding:14px 18px"><p><strong>Fix 3:</strong> <span class="mono">feature_drift_monitor()</span> comparing online vs offline. Alert if delta &gt;15% or PSI &gt;0.25.</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Governance</span><span>16 / 19</span></div>
+</div>
+
+<!-- SLIDE 17 — DATA MESH -->
+<div class="slide slide-light"
+  data-notes="Questão 2: como escalar para Data Mesh com times de maturidade desigual. O princípio: padronize o Contrato (o que o output garante), não a Implementação (como o time chegou lá). Você não pode forçar uniformidade técnica. Mas pode forçar conformidade de interface. O Paved Road SDK é a alavanca: torna conformidade mais fácil que não-conformidade.">
+  <div class="eyebrow">Section 04 · Data Mesh Governance</div>
+  <h2>Governing at Scale — Uneven Team Maturity</h2>
+  <div class="body">
+    <div class="row">
+      <div class="card accent-green col">
+        <div class="card-icon">🔒</div><h3>Standardize Org-Wide (The Contract)</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot"></div>Feature schema + version registry</li>
+          <li><div class="dot"></div>Freshness SLA tiers (T1 &lt;1h, T2 &lt;6h, T3 &lt;24h)</li>
+          <li><div class="dot"></div>5 mandatory KRIs with fixed RAG thresholds</li>
+          <li><div class="dot"></div>CI parity gate: hard block on PSI &gt;0.10</li>
+          <li><div class="dot"></div>Lineage: <span class="mono">git_sha, run_id</span> on every write</li>
+        </ul>
+      </div>
+      <div class="card accent-amber col">
+        <div class="card-icon">🧩</div><h3>Leave to Domain Teams (The Implementation)</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot" style="background:#f59e0b"></div>Pipeline tech: Spark, Flink, dbt, pandas</li>
+          <li><div class="dot" style="background:#f59e0b"></div>Storage technology (within SLA)</li>
+          <li><div class="dot" style="background:#f59e0b"></div>Window sizes and domain-specific logic</li>
+          <li><div class="dot" style="background:#f59e0b"></div>Compute scheduling and infra</li>
+        </ul>
+      </div>
+      <div class="card accent-blue col">
+        <div class="card-icon">🛤️</div><h3>Adoption Without Authority</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot"></div><strong>Paved Road SDK</strong> — Compliance built-in, not extra work</li>
+          <li><div class="dot"></div><strong>Public KRI dashboard</strong> — RED blocks T1 serving</li>
+          <li><div class="dot"></div><strong>Risk Champions embedded</strong> — Partners, not auditors</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="padding:16px 22px;border-left:4px solid #0072B2">
+      <p style="font-style:italic;color:#0f172a;font-weight:500">"Standardize the interoperability contract — what the feature output must guarantee. Leave the implementation to the domain team."</p>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Data Mesh</span><span>17 / 19</span></div>
+</div>
+
+<!-- SLIDE 18 — AI TRANSPARENCY -->
+<div class="slide slide-light"
+  data-notes="O case pediu explicitamente transparência no uso de IA. Apresentar isso demonstra maturidade e boa-fé. A distinção importante: IA acelerou execução (código, HTML, layout), mas todos os julgamentos críticos foram humanos e baseados em evidências do sistema real. Nenhuma IA encontrou o bug do FRESHNESS_TTL — isso exigiu ler o código.">
+  <div class="eyebrow">Methodology</div>
+  <h2>AI Transparency Statement</h2>
+  <p style="margin-bottom:28px">As requested in the case guidelines, this deliverable was prepared with an AI acting as a pair-programmer. Transparency about this is itself a valued signal.</p>
+  <div class="body" style="justify-content:flex-start">
+    <div class="row">
+      <div class="card col" style="border-color:#e2e8f0">
+        <div class="card-icon" style="font-size:24px">🤖</div>
+        <h3 style="color:#64748b">AI Contributions — Execution</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot" style="background:#94a3b8"></div>Scaffolded HTML/CSS layout for this slide deck</li>
+          <li><div class="dot" style="background:#94a3b8"></div>Wrote matplotlib code for dashboard charts</li>
+          <li><div class="dot" style="background:#94a3b8"></div>Integrated Mermaid.js diagrams and formatting</li>
+        </ul>
+      </div>
+      <div class="card col accent-blue">
+        <div class="card-icon" style="font-size:24px">🧠</div>
+        <h3>Human Contributions — Judgment</h3>
+        <ul class="blist" style="margin-top:10px;gap:8px">
+          <li><div class="dot"></div>Cloned the repo, ran both pipelines, queried SQLite stores directly</li>
+          <li><div class="dot"></div>Identified EWMA vs Exact Mean divergence in live production data</li>
+          <li><div class="dot"></div>Found the missing <span class="mono">FRESHNESS_TTL</span> import in <span class="mono">online_store.py</span></li>
+          <li><div class="dot"></div>Formulated PAUSE/Proceed verdicts and 4 unlock gates</li>
+          <li><div class="dot"></div>Designed the Data Mesh governance framework</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card bg-blue" style="padding:14px 20px">
+      <p><strong>Philosophy:</strong> AI accelerates delivery and formatting. Independent risk judgment, system validation, and governance design are fundamentally human responsibilities — especially in a regulated credit context.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Compass Risk Assessment · Methodology</span><span>18 / 19</span></div>
+</div>
+
+<!-- SLIDE 19 — Q&A -->
+<div class="slide slide-end"
+  data-notes="Closing in English (2 min): 'Compass has two material, infrastructure-specific risks that I observed empirically. Risk 1: the batch and streaming pipelines compute mathematically different results for the same feature — this is a Training/Serving Skew that affects 14% of credit decisions. Risk 2: FRESHNESS_TTL is defined in config but never enforced at read time, allowing stale data to be served silently. My position: Change 1 must PAUSE until both risks are remediated. Change 2 can Proceed — but we should replace manual review with automated parity gates, which is both faster and more rigorous. For Data Mesh: standardize the interoperability contract, not the implementation. Governance and speed are not in opposition — good automated gates are what makes safe speed possible.'">
+  <div style="max-width:780px">
+    <h1 class="xl" style="margin-bottom:20px">Q &amp; A</h1>
+    <p style="color:#94a3b8;font-size:18px;max-width:580px;margin:0 auto 40px">Closing recommendation available in English on request.</p>
+    <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
+      <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:20px 24px;text-align:center">
+        <div style="font-size:26px;margin-bottom:8px">🌎</div>
+        <div style="color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Session</div>
+        <div style="color:#f8fafc;font-weight:600;margin-top:4px;font-size:15px">Português · English Q&amp;A</div>
+      </div>
+      <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:20px 24px;text-align:center">
+        <div style="font-size:26px;margin-bottom:8px">📦</div>
+        <div style="color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Evidence</div>
+        <div style="color:#f8fafc;font-weight:600;margin-top:4px;font-size:15px">Live System · Codebase</div>
+      </div>
+      <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:20px 24px;text-align:center">
+        <div style="font-size:26px;margin-bottom:8px">📊</div>
+        <div style="color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Full Analysis</div>
+        <div style="color:#f8fafc;font-size:13px;font-weight:600;margin-top:4px;font-family:'JetBrains Mono',monospace">business_case.ipynb</div>
+      </div>
+    </div>
+    <div style="margin-top:40px;color:#475569;font-size:13px">
+      <kbd style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-family:'JetBrains Mono',monospace;color:#94a3b8;font-size:11px">← →</kbd> Navigate &nbsp;·&nbsp;
+      <kbd style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-family:'JetBrains Mono',monospace;color:#94a3b8;font-size:11px">N</kbd> Speaker Notes &nbsp;·&nbsp;
+      <kbd style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-family:'JetBrains Mono',monospace;color:#94a3b8;font-size:11px">F</kbd> Fullscreen
+    </div>
+  </div>
+  <div class="footer" style="width:100%;border-top:1px solid rgba(255,255,255,.08);position:absolute;bottom:0;left:0;right:0;padding:14px 80px">
+    <span>Compass — Independent Risk Assessment · Solara Digital Bank · 2026</span>
+    <span>19 / 19</span>
+  </div>
+</div>
+
+</div><!-- /#deck -->
+
+<div id="notes">
+  <div class="notes-bar">
+    <span>🗒 SPEAKER NOTES</span>
+    <button onclick="toggleNotes()">✕ Close (N)</button>
+  </div>
+  <div id="notes-text"></div>
+</div>
+
+<div id="nav">
+  <button class="nav-btn" onclick="prev()">← Prev</button>
+  <div class="nav-sep"></div>
+  <span id="counter">1 / 19</span>
+  <div class="nav-sep"></div>
+  <button class="nav-btn primary" onclick="next()">Next →</button>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" onclick="toggleNotes()">📝 Notes</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0, notesOpen = false;
+function show(n){
+  slides.forEach(s=>s.classList.remove('active'));
+  cur = (n+total)%total;
+  slides[cur].classList.add('active');
+  document.getElementById('counter').textContent=(cur+1)+' / '+total;
+  document.getElementById('progress-fill').style.width=((cur+1)/total*100)+'%';
+  if(notesOpen) refreshNotes();
+}
+function next(){show(cur+1);}
+function prev(){show(cur-1);}
+function refreshNotes(){document.getElementById('notes-text').textContent=slides[cur].dataset.notes||'';}
+function toggleNotes(){
+  notesOpen=!notesOpen;
+  document.getElementById('notes').classList.toggle('on',notesOpen);
+  document.getElementById('nav').classList.toggle('notes-on',notesOpen);
+  if(notesOpen) refreshNotes();
+}
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown',' '].includes(e.key)){e.preventDefault();next();}
+  if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();prev();}
+  if(e.key==='n'||e.key==='N') toggleNotes();
+  if(e.key==='f'||e.key==='F'){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+show(0);
+</script>
+</body>
+</html>
