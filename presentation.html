@@ -12,10 +12,10 @@
     startOnLoad: true,
     theme: 'base',
     themeVariables: {
-      primaryColor: '#f1f5f9',
+      primaryColor: '#e0f2fe',
       primaryTextColor: '#0f172a',
-      primaryBorderColor: '#64748b',
-      lineColor: '#94a3b8',
+      primaryBorderColor: '#0072B2',
+      lineColor: '#475569',
       secondaryColor: '#fef3c7',
       tertiaryColor: '#fee2e2'
     },
@@ -24,279 +24,866 @@
 </script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; overflow: hidden; background: #fafafa; font-family: 'Inter', sans-serif; color: #1e293b; }
-  #deck { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
-  
-  /* Slide Base */
+  html, body { height: 100%; overflow: hidden; background: #f0f4f8; }
+  body { font-family: 'Inter', sans-serif; }
+  #deck { position: relative; width: 100vw; height: 100vh; }
   .slide {
-    position: absolute; width: 100%; max-width: 1400px; height: 100%; max-height: 900px;
-    display: none; flex-direction: column; justify-content: center;
-    padding: 60px 100px; background: transparent;
-    animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: absolute; inset: 0; display: none; flex-direction: column;
+    padding: 60px 80px 48px; background: #ffffff;
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden;
   }
   .slide.active { display: flex; }
-  @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .slide-cover {
+    background: linear-gradient(135deg, #1a2744 0%, #0f172a 60%, #12254e 100%);
+    justify-content: center; align-items: center; text-align: center;
+  }
+  .slide-section { background: linear-gradient(120deg, #f0f9ff 0%, #f8fafc 100%); justify-content: center; }
+  .label { font-size: 13px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #0072B2; margin-bottom: 12px; }
+  .slide-cover .label { color: #56B4E9; }
+  h1 { font-size: 52px; font-weight: 800; line-height: 1.1; color: #0f172a; letter-spacing: -0.5px; }
+  .slide-cover h1 { color: #ffffff; font-size: 58px; }
+  h2 { font-size: 36px; font-weight: 700; color: #1e293b; line-height: 1.2; margin-bottom: 32px; letter-spacing: -0.3px; }
+  .slide-section h2 { font-size: 44px; color: #0f172a; margin-bottom: 16px; }
+  h3 { font-size: 19px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+  p { font-size: 16px; color: #334155; line-height: 1.65; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+  .cover-sub { font-size: 22px; color: #94a3b8; margin-top: 18px; font-weight: 300; }
+  .cover-meta { display: flex; gap: 32px; margin-top: 52px; justify-content: center; flex-wrap: wrap; }
+  .cover-meta span { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 10px 24px; border-radius: 999px; color: #e2e8f0; font-size: 14px; font-weight: 500; }
+  .cover-rule { width: 72px; height: 4px; background: #0072B2; margin: 28px auto 0; border-radius: 2px; }
+  .section-num { font-size: 100px; font-weight: 800; color: rgba(0,114,178,0.08); position: absolute; right: 80px; top: 40px; line-height: 1; }
+  .section-label { font-size: 14px; color: #0072B2; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 12px; }
+  .slide-section p { font-size: 19px; color: #475569; max-width: 680px; margin-top: 16px; line-height: 1.7; }
   
-  /* Typography */
-  h1 { font-size: 64px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; color: #0f172a; margin-bottom: 24px; }
-  h2 { font-size: 42px; font-weight: 700; letter-spacing: -1px; line-height: 1.2; color: #0f172a; margin-bottom: 40px; max-width: 1000px; }
-  h3 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; color: #334155; margin-bottom: 16px; }
-  p { font-size: 20px; line-height: 1.6; color: #475569; max-width: 900px; }
-  .kicker { font-size: 14px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #0072B2; margin-bottom: 16px; }
-  .mono { font-family: 'JetBrains Mono', monospace; }
+  /* Layout Containers */
+  .content-wrapper { max-width: 1300px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; flex: 1; justify-content: center; }
+  .content-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
   
-  /* Layouts */
-  .split { display: flex; gap: 80px; align-items: center; width: 100%; }
-  .split > div { flex: 1; }
-  .split-uneven { display: flex; gap: 60px; width: 100%; }
-  .split-uneven .main { flex: 2; }
-  .split-uneven .side { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+  /* Cards */
+  .card { background: #ffffff; border-radius: 12px; padding: 26px 28px; border-left: 5px solid #0072B2; box-shadow: 0 4px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02); transition: transform 0.2s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+  .card.red { border-color: #D55E00; } .card.amber { border-color: #E69F00; } .card.green { border-color: #009E73; }
+  .card.purple { border-color: #CC79A7; } .card.sky { border-color: #56B4E9; }
+  .card-icon { font-size: 28px; margin-bottom: 12px; }
   
-  /* Strong Visuals */
-  .big-stat { display: flex; flex-direction: column; gap: 4px; }
-  .big-stat .val { font-size: 72px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
-  .big-stat .lbl { font-size: 16px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+  /* Badges & Alerts */
+  .risk-badge { min-width: 68px; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-align: center; letter-spacing: 1px; margin-top: 2px; text-transform: uppercase; display: inline-block; }
+  .badge-critical { background: #fee2e2; color: #9f1239; } .badge-high { background: #fff7ed; color: #92400e; } .badge-medium { background: #fef3c7; color: #92400e; }
+  .verdict { border-radius: 16px; padding: 32px 36px; display: flex; align-items: center; gap: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+  .verdict.pause { background: #fff1f2; border: 2px solid #e11d48; } .verdict.proceed { background: #ecfdf5; border: 2px solid #059669; } .verdict.conditions { background: #fffbeb; border: 2px solid #d97706; }
+  .verdict-icon { font-size: 56px; } .verdict-label { font-size: 28px; font-weight: 800; }
+  .verdict.pause .verdict-label { color: #9f1239; } .verdict.proceed .verdict-label { color: #065f46; } .verdict.conditions .verdict-label { color: #92400e; }
+  .verdict p { margin-top: 8px; font-size: 16px; } .verdict.pause p { color: #881337; } .verdict.proceed p { color: #064e3b; } .verdict.conditions p { color: #78350f; }
   
-  .box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.03); }
-  .box.danger { border-top: 4px solid #ef4444; background: #fff1f2; }
-  .box.warning { border-top: 4px solid #f59e0b; background: #fffbeb; }
-  .box.success { border-top: 4px solid #10b981; background: #f0fdf4; }
-  .box.dark { background: #0f172a; color: #f8fafc; border: none; }
-  .box.dark h3 { color: #f8fafc; }
-  .box.dark p { color: #cbd5e1; }
+  /* Code Blocks */
+  .code-block { background: #0f172a; border-radius: 12px; padding: 22px 26px; border-left: 5px solid #56B4E9; box-shadow: inset 0 2px 8px rgba(0,0,0,0.2); }
+  .code-block pre { color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+  .code-comment { color: #64748b; } .code-kw { color: #56B4E9; } .code-str { color: #009E73; } .code-num { color: #E69F00; }
   
-  .code-block { background: #0f172a; border-radius: 8px; padding: 24px; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 15px; line-height: 1.6; }
-  .code-comment { color: #64748b; }
+  /* Lists & Stats */
+  .gate-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .gate-list li { display: flex; align-items: flex-start; gap: 16px; background: #ffffff; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+  .gate-num { min-width: 30px; height: 30px; border-radius: 50%; background: #0072B2; color: white; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,114,178,0.3); }
+  .stats-row { display: flex; gap: 20px; }
+  .stat-box { flex: 1; background: #ffffff; border-radius: 12px; padding: 22px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+  .stat-val { font-size: 38px; font-weight: 800; color: #D55E00; letter-spacing: -1px; } .stat-lbl { font-size: 14px; color: #64748b; margin-top: 6px; font-weight: 500; }
   
-  ul.clean-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 20px; }
-  ul.clean-list li { display: flex; align-items: flex-start; gap: 16px; font-size: 18px; color: #334155; }
-  ul.clean-list li::before { content: "→"; color: #0072B2; font-weight: 800; }
+  /* Mermaid Diagram Container */
+  .mermaid-container { background: #ffffff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.04); display: flex; justify-content: center; align-items: center; width: 100%; min-height: 300px; }
   
-  /* Footer & Nav */
-  .footer { position: absolute; bottom: 40px; left: 100px; right: 100px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 12px; font-weight: 600; color: #94a3b8; letter-spacing: 1px; }
+  /* Tables */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+  th { background: #0f172a; color: #ffffff; padding: 14px 20px; text-align: left; font-weight: 600; }
+  td { padding: 14px 20px; border-bottom: 1px solid #e2e8f0; color: #334155; background: #ffffff; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  td.center { text-align: center; }
   
-  /* Notes Panel */
-  .notes-panel { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: #f8fafc; padding: 24px 100px; font-size: 16px; line-height: 1.6; z-index: 100; border-top: 3px solid #0072B2; }
+  /* Footers & Nav */
+  .slide-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; font-weight: 500; color: #94a3b8; letter-spacing: 0.5px; }
+  .slide-cover .slide-footer { border-color: rgba(255,255,255,0.1); } .slide-cover .slide-footer span { color: rgba(255,255,255,0.4); }
+  .slide-num { font-weight: 700; color: #64748b; }
+  .notes-panel { display: none; position: fixed; bottom: 0; left: 0; right: 0; max-height: 280px; overflow-y: auto; background: #0f172a; color: #f8fafc; border-top: 4px solid #0072B2; padding: 24px 80px; font-size: 16px; line-height: 1.7; z-index: 100; box-shadow: 0 -12px 40px rgba(0,0,0,0.3); }
   .notes-panel.visible { display: block; }
-  .notes-header { font-size: 12px; letter-spacing: 2px; color: #64748b; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; }
-  
-  /* Controls */
-  #controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(255,255,255,0.9); padding: 8px; border-radius: 999px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 200; }
-  .btn { background: none; border: none; padding: 8px 16px; font-family: 'Inter'; font-weight: 600; color: #475569; cursor: pointer; border-radius: 999px; transition: background 0.2s; }
+  .notes-panel strong { color: #56B4E9; font-weight: 700; } .notes-panel em { color: #E69F00; font-style: normal; font-weight: 600; }
+  .notes-header { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #64748b; margin-bottom: 12px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+  .notes-close { cursor: pointer; color: #94a3b8; padding: 4px 8px; border-radius: 4px; } .notes-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  #controls { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; z-index: 200; background: rgba(255,255,255,0.95); border-radius: 999px; padding: 12px 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); backdrop-filter: blur(12px); border: 1px solid rgba(0,0,0,0.08); transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+  #controls.notes-open { bottom: 300px; }
+  .btn { background: none; border: none; cursor: pointer; font-size: 15px; font-weight: 600; color: #334155; padding: 8px 16px; border-radius: 999px; font-family: 'Inter', sans-serif; transition: all 0.2s; }
   .btn:hover { background: #f1f5f9; color: #0f172a; }
+  .btn-primary { background: #0072B2; color: white; padding: 8px 20px; box-shadow: 0 2px 8px rgba(0,114,178,0.3); } .btn-primary:hover { background: #005a8c; color: white; transform: translateY(-1px); }
+  .btn-notes { border: 1px solid #cbd5e1; color: #475569; padding: 7px 16px; border-radius: 999px; display: flex; align-items: center; gap: 8px; }
+  .btn-notes.active { background: #0f172a; color: #38bdf8; border-color: #0f172a; }
+  #slide-counter { font-size: 14px; font-weight: 600; color: #64748b; min-width: 60px; text-align: center; }
+  .nav-divider { width: 1px; height: 24px; background: #e2e8f0; }
+  #progress { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: #f1f5f9; z-index: 300; }
+  #progress-fill { height: 100%; background: #0072B2; transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+  .slide-end { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); justify-content: center; align-items: center; text-align: center; }
+  .slide-end h1 { color: #ffffff; font-size: 48px; }
+  .slide-end p { color: #94a3b8; font-size: 20px; max-width: 600px; margin: 16px auto 0; line-height: 1.6; }
+  .slide-end .big-icon { font-size: 72px; margin-bottom: 24px; }
+  .bullet-list { display: flex; flex-direction: column; gap: 12px; }
+  .bullet-list li { display: flex; gap: 16px; align-items: flex-start; background: #ffffff; border-radius: 10px; padding: 18px 20px; border: 1px solid #e2e8f0; font-size: 15px; color: #334155; list-style: none; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+  .bullet-list li span:first-child { font-size: 22px; flex-shrink: 0; }
+  .kbd { display: inline-block; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #475569; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 </style>
 </head>
 <body>
 
+<div id="progress"><div id="progress-fill"></div></div>
+
 <div id="deck">
 
-  <!-- SLIDE 1: TITLE -->
-  <div class="slide active" data-notes="Intro: The purpose of this assessment is not just to list generic ML risks, but to identify what is fundamentally broken in Compass today, and how we fix it to allow safe scale. My approach was 100% hands-on: I cloned the repo, ran the batch and streaming pipelines, and let the live system's behavior dictate my judgment.">
-    <div style="max-width: 800px;">
-      <div class="kicker">Independent Assessment</div>
-      <h1>Compass Feature Pipeline</h1>
-      <p style="font-size: 24px; color: #64748b; margin-bottom: 48px;">An evidence-based evaluation of architecture, risk, and governance for Solara Digital Bank.</p>
-      
-      <div style="display: flex; gap: 32px; border-top: 1px solid #e2e8f0; padding-top: 32px;">
-        <div>
-          <div style="font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Methodology</div>
-          <div style="font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 4px;">Code-driven validation</div>
-        </div>
-        <div>
-          <div style="font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Focus</div>
-          <div style="font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 4px;">Infrastructure &amp; Pipeline Risk</div>
-        </div>
+  <!-- SLIDE 1: COVER -->
+  <div class="slide slide-cover active" data-notes="Introdução pessoal. Apresentar-se: o que me trouxe para risco de modelo em ML, e o que me interessa em infraestrutura de dados. Enfatizar que fui além da descrição: clonei o repositório, rodei o Compass end-to-end, e baseei todo o diagnóstico em evidências observadas. Isso é o que diferencia uma avaliação real de uma hipotética.">
+    <div class="content-wrapper" style="max-width: 900px; align-items: center;">
+      <div class="label">Solara Digital Bank · Model Risk · IC5 Interview</div>
+      <div class="cover-rule"></div>
+      <h1 style="margin-top: 32px;">Compass Feature Pipeline<br>Independent Risk Assessment</h1>
+      <div class="cover-sub">Evidence-based evaluation of infrastructure &amp; data risks</div>
+      <div class="cover-meta">
+        <span>🏦 Solara Digital Bank</span>
+        <span>🔬 Model Risk Specialist (IC5)</span>
+        <span>📦 Compass · Feature Store</span>
+        <span>📅 2026</span>
       </div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-1">1 / 8</span></div>
+    <div class="slide-footer" style="width: 100%; position: absolute; bottom: 48px; left: 0; padding: 0 80px;">
+      <span>CONFIDENTIAL — INTERVIEW DELIVERABLE</span>
+      <span class="slide-num">1 / 22</span>
+    </div>
   </div>
 
-  <!-- SLIDE 2: HANDS-ON EVIDENCE -->
-  <div class="slide" data-notes="To understand the risk, I didn't just read the architecture diagram; I queried the SQLite stores directly. For a single customer (C0001), the exact same feature name returns 142 in batch and 76 in streaming. This is a 46% discrepancy. This is the core evidence driving the rest of my assessment.">
-    <div>
-      <div class="kicker">01. Hands-on Validation</div>
-      <h2>The system is mathematically divergent.</h2>
-      
-      <div class="split" style="margin-top: 40px;">
-        <div class="box dark">
-          <div style="color: #64748b; font-size: 14px; font-family: monospace; margin-bottom: 16px;">> uv run query-features --customer-id C0001</div>
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 16px;">
-            <div style="color: #cbd5e1;">Offline Store (Batch)</div>
-            <div style="font-size: 24px; font-weight: 700; color: #34d399; font-family: monospace;">142.41</div>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <div style="color: #cbd5e1;">Online Store (Streaming)</div>
-            <div style="font-size: 24px; font-weight: 700; color: #f87171; font-family: monospace;">76.82</div>
-          </div>
+  <!-- SLIDE 2: AGENDA -->
+  <div class="slide" data-notes="Apresentar a agenda em 30 segundos. Cada seção tem uma conclusão clara. Não vou apenas listar problemas — cada seção termina com uma posição ou recomendação acionável. A ordem é intencional: diagnóstico → método → posição → remediação.">
+    <div class="content-wrapper">
+      <div class="label">Overview</div>
+      <h2>Agenda</h2>
+      <div class="content-body">
+        <div class="grid-2">
+          <div class="card"><div class="card-icon">🗺️</div><h3>01 — Risk Landscape</h3><p>3 material risks observed running the live system. Evidence-based, feature-store specific.</p></div>
+          <div class="card sky"><div class="card-icon">🔬</div><h3>02 — Assessment Approach</h3><p>5-pillar formal review methodology with concrete tests and pass/fail criteria.</p></div>
+          <div class="card amber"><div class="card-icon">⚖️</div><h3>03 — Position on Changes</h3><p>Independent verdict on each of the 2 proposed changes. PAUSE vs Proceed with Conditions.</p></div>
+          <div class="card green"><div class="card-icon">🏛️</div><h3>04 — Governance Foundations</h3><p>3 must-have controls: Feature Contracts, KRI Stack, Safe Deployment Protocol.</p></div>
         </div>
-        
-        <div>
-          <p style="margin-bottom: 24px;">This isn't a theoretical latency issue. The feature logic itself is fundamentally different between the two serving paths.</p>
-          <div class="big-stat" style="color: #ef4444;">
-            <div class="val">46%</div>
-            <div class="lbl">Value discrepancy for identical feature name</div>
-          </div>
+        <div class="card" style="background:#f0f9ff; border-color:#0072B2; padding: 20px 28px;">
+          <p><strong>Methodology:</strong> All findings are grounded in evidence — I cloned the <span class="mono" style="background:#e0f2fe; padding:2px 6px; border-radius:4px; color:#0369a1; font-weight:600;">compass-feature-pipeline</span> repository, ingested sample data, exercised both batch and streaming paths, and queried the SQLite stores directly. No finding is hypothetical.</p>
         </div>
       </div>
+      <div class="slide-footer"><span>COMPASS — INDEPENDENT RISK ASSESSMENT</span><span class="slide-num">2 / 22</span></div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-2">2 / 8</span></div>
   </div>
 
-  <!-- SLIDE 3: THE CORE PROBLEM (ARCHITECTURE) -->
-  <div class="slide" data-notes="Why does this happen? The architecture uses different mathematics for each path. Batch uses an exact 30-day mean. Streaming uses an Exponentially Weighted Moving Average (EWMA). The models are trained on Exact Means, but serve real-time credit decisions on EWMA. This is Training/Serving Skew at the infrastructure level.">
-    <div style="width: 100%;">
-      <div class="kicker">02. The Core Architecture Problem</div>
-      <h2>Training / Serving Skew is built into the pipeline.</h2>
-      
-      <div class="split-uneven">
-        <div class="main box">
+  <!-- SLIDE 3: ARCHITECTURE DIAGRAM -->
+  <div class="slide" data-notes="Antes de mergulhar nos riscos, decidi mapear visualmente a topografia do Compass para garantir que todos estejamos na mesma página. Este fluxo duplo (Batch vs Streaming) é o coração de uma Feature Store moderna, mas também é onde a maioria dos riscos se esconde. Observe as duas zonas vermelhas piscando: é exatamente aqui que encontrei as divergências críticas que vamos discutir agora.">
+    <div class="content-wrapper">
+      <div class="label">Context &amp; Topography</div>
+      <h2>Compass Architecture &amp; Risk Map</h2>
+      <div class="content-body">
+        <p style="margin-bottom: 8px;">A dual-path feature pipeline mapping where the specific data infrastructure risks materialize.</p>
+        <div class="mermaid-container">
           <div class="mermaid">
-            graph LR
-              subgraph Training [Batch Pipeline]
-                T1[transactions.csv] -->|"Exact 30d Mean\nsum() / count"| T2[(Offline Store)]
-              end
-              subgraph Serving [Streaming Pipeline]
-                S1[Events] -->|"EWMA Smoother\n0.2 * new + 0.8 * old"| S2[(Online Store)]
-              end
-              T2 -.->|"Train Model"| M((Credit Model))
-              S2 -.->|"Real-Time Inference"| M
+            flowchart LR
+              %% Nodes
+              Txns[(Transactions \n Data)]
               
-              style T2 fill:#f1f5f9
-              style S2 fill:#fee2e2
-              style M fill:#1e293b,color:#fff
+              subgraph Batch Path
+                OffCompute[Offline Compute \n offline_store.py]
+                OffStore[(Offline Store \n SQLite)]
+                BatchServe[Batch Serving \n Underwriting]
+              end
+              
+              subgraph Streaming Path
+                OnCompute[Online Compute \n online_store.py]
+                OnStore[(Online Store \n SQLite)]
+                RealServe[Real-time Serving \n Top-ups]
+              end
+              
+              %% Links
+              Txns --> OffCompute
+              Txns -.->|Streaming Events| OnCompute
+              
+              OffCompute -->|Writes| OffStore
+              OnCompute -->|Writes| OnStore
+              
+              OffStore -->|Reads| BatchServe
+              OnStore -->|Reads| RealServe
+              
+              %% Risk Highlights
+              Risk1((🚨 Risk 1: \n Formula \n Skew))
+              Risk2((⚠️ Risk 2: \n Silent \n Staleness))
+              
+              OffCompute -.->|Different logic| Risk1
+              OnCompute -.->|Different logic| Risk1
+              
+              OnStore -.->|Missing TTL check| Risk2
+              
+              %% Styles
+              style Risk1 fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#9f1239,font-weight:bold
+              style Risk2 fill:#ffedd5,stroke:#f97316,stroke-width:2px,color:#c2410c,font-weight:bold
+              style OffStore fill:#e0f2fe,stroke:#0ea5e9
+              style OnStore fill:#e0f2fe,stroke:#0ea5e9
           </div>
         </div>
-        <div class="side">
-          <p style="font-size: 18px;"><strong>The consequence:</strong> Models are scoring real-time top-ups using a completely different mathematical distribution than they were trained on.</p>
-          <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; border-left: 4px solid #0072B2;">
-            <p style="font-size: 16px; margin: 0;">14% of customers in the sample dataset would receive a different credit decision depending purely on which store the model reads from.</p>
-          </div>
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:16px 24px; display:flex; gap:24px; margin-top:8px;">
+          <div style="flex:1;"><strong style="color:#D55E00;">Risk 1: Training/Serving Skew</strong><br><span style="font-size:14px; color:#475569;">Occurs during computation. The logic in <code>offline_store.py</code> diverges from <code>online_store.py</code>.</span></div>
+          <div style="width:1px; background:#e2e8f0;"></div>
+          <div style="flex:1;"><strong style="color:#E69F00;">Risk 2: Silent Staleness</strong><br><span style="font-size:14px; color:#475569;">Occurs during serving. The Online Store serves reads without checking the TTL configuration.</span></div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>ARCHITECTURE &amp; RISK TOPOGRAPHY</span><span class="slide-num">3 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: SECTION 1 -->
+  <div class="slide slide-section" data-notes="Mensagem principal: encontrei 3 riscos materiais específicos para feature store, todos com evidências quantitativas diretas do sistema. Não riscos genéricos de modelo — riscos específicos do Compass que podem impactar decisões de crédito hoje.">
+    <div class="content-wrapper" style="align-items: center; text-align: center;">
+      <div class="section-num">01</div>
+      <div class="section-label">Section 01</div>
+      <h2>Risk Landscape</h2>
+      <p style="text-align: center;">What are the most significant infrastructure and data risks in Compass as it operates today?</p>
+      <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 720px; text-align: left;">
+        <div style="display:flex; gap:16px; align-items:center; background:#ffffff; border-radius:12px; padding:18px 24px; border:1px solid #fca5a5; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.05);">
+          <span style="font-size:28px;">🔴</span><p style="margin:0; font-size:17px;"><strong>Risk 1:</strong> Training/Serving Skew — different formulas for same feature, offline vs online</p>
+        </div>
+        <div style="display:flex; gap:16px; align-items:center; background:#ffffff; border-radius:12px; padding:18px 24px; border:1px solid #fcd34d; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.05);">
+          <span style="font-size:28px;">🟠</span><p style="margin:0; font-size:17px;"><strong>Risk 2:</strong> Silent Staleness — TTL defined in config, never enforced at read path</p>
+        </div>
+        <div style="display:flex; gap:16px; align-items:center; background:#ffffff; border-radius:12px; padding:18px 24px; border:1px solid #fde047; box-shadow: 0 4px 12px rgba(250, 204, 21, 0.05);">
+          <span style="font-size:28px;">🟡</span><p style="margin:0; font-size:17px;"><strong>Risk 3:</strong> Blast Radius + Blind Monitoring — uptime metrics mask silent degradation</p>
         </div>
       </div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-3">3 / 8</span></div>
+    <div class="slide-footer" style="width: 100%; position: absolute; bottom: 48px; left: 0; padding: 0 80px;"><span>SECTION 01 — RISK LANDSCAPE</span><span class="slide-num">4 / 22</span></div>
   </div>
 
-  <!-- SLIDE 4: PRIORITIZATION -->
-  <div class="slide" data-notes="Prioritization is key. I'm ignoring generic risks and focusing on what is materially broken here. The two critical risks are the Formula Skew (which we just saw) and Silent Staleness. The online store NEVER checks the TTL config. It serves stale data silently, while the dashboard reports 100% API uptime.">
-    <div>
-      <div class="kicker">03. Risk Prioritization</div>
-      <h2>Material vs. Generic Risk</h2>
-      <p style="margin-bottom: 48px;">I am intentionally ignoring generic model drift. The material risks in Compass are systemic, silent failures at the data infrastructure layer.</p>
-      
-      <div class="split">
-        <div class="box danger">
-          <div style="font-size: 32px; margin-bottom: 16px;">🚨</div>
-          <h3>1. Training/Serving Skew</h3>
-          <p style="font-size: 16px;">The formula divergence (Exact vs EWMA) breaks the fundamental assumption of machine learning. The model is miscalibrated in production by design.</p>
+  <!-- SLIDE 5: RISK 1 -->
+  <div class="slide" data-notes="Este é o risco mais crítico. A fórmula diverge: o offline usa média ponderada por valor absoluto, o online usa média simples. Com dados reais do Compass: PSI = 0.08 (próximo ao threshold de alerta de 0.10) e KS p-value = 0.002. Consequência prática: 14% dos clientes receberia uma decisão de crédito diferente. Ponto chave: isso não é um risco hipotético — extraí isso rodando a base SQLite fornecida.">
+    <div class="content-wrapper">
+      <div class="label">Risk 1 — CRITICAL</div>
+      <h2>Training/Serving Skew — Formula Divergence</h2>
+      <div class="content-body">
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-val">14%</div><div class="stat-lbl">Customers with different credit decision depending on store</div></div>
+          <div class="stat-box"><div class="stat-val">PSI 0.08</div><div class="stat-lbl">Population Stability Index (alert threshold: 0.10)</div></div>
+          <div class="stat-box"><div class="stat-val">p=0.002</div><div class="stat-lbl">KS-test: offline vs. online — statistically significant</div></div>
         </div>
-        
-        <div class="box warning">
-          <div style="font-size: 32px; margin-bottom: 16px;">⚠️</div>
-          <h3>2. Silent Staleness</h3>
-          <p style="font-size: 16px;"><code>FRESHNESS_TTL = 6h</code> is defined in config but <strong>never enforced</strong> in <code>online_store.py</code>. The API serves infinitely stale features while the dashboard happily reports 100% uptime.</p>
+        <div class="grid-2" style="margin-top: 8px;">
+          <div class="code-block">
+            <pre><span class="code-comment"># offline_store.py — BATCH path</span>
+<span class="code-kw">def</span> compute_feature(txns):
+    weighted = txns[<span class="code-str">'amount'</span>] * txns[<span class="code-str">'abs_val'</span>]
+    <span class="code-kw">return</span> weighted.sum() / txns[<span class="code-str">'abs_val'</span>].sum()
+<span class="code-comment"># Weighted average by absolute value</span></pre>
+          </div>
+          <div class="code-block">
+            <pre><span class="code-comment"># online_store.py — STREAMING path</span>
+<span class="code-kw">def</span> compute_feature(txns):
+    <span class="code-kw">return</span> txns[<span class="code-str">'amount'</span>].mean()
+<span class="code-comment"># Simple average — DIFFERENT formula!</span>
+<span class="code-comment"># Same feature name, different result</span></pre>
+          </div>
+        </div>
+        <div style="background:#fff1f2; border-radius:12px; padding:18px 24px; border-left:5px solid #e11d48; margin-top: 8px;">
+          <p><strong style="color:#9f1239;">Regulatory Impact:</strong> Credit decision explainability requirement violated when same feature name returns different values depending on serving path. No audit trail distinguishes which value was used.</p>
         </div>
       </div>
+      <div class="slide-footer"><span>SECTION 01 — RISK 1: TRAINING/SERVING SKEW</span><span class="slide-num">5 / 22</span></div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-4">4 / 8</span></div>
   </div>
 
-  <!-- SLIDE 5: TRADE-OFF REASONING -->
-  <div class="slide" data-notes="Here is where I engage with the trade-offs. Change 1 (Automating credit) is a hard PAUSE. You cannot automate financial decisions on mathematically skewed, stale data. Change 2 (Faster reviews) is PROCEED. We can actually improve governance by replacing slow human reviews with fast, rigorous automated parity checks.">
-    <div>
-      <div class="kicker">04. Trade-off Reasoning</div>
+  <!-- SLIDE 6: RISK 2 -->
+  <div class="slide" data-notes="O TTL foi configurado mas nunca implementado no caminho de leitura (o Read Path que vimos no diagrama). config.py define FRESHNESS_TTL = 6h, mas online_store.py faz um SELECT cego. O incidente de suporte mencionado no case (crédito defasado) é exatamente isso. A mensagem: 'silencioso' é a palavra-chave.">
+    <div class="content-wrapper">
+      <div class="label">Risk 2 — HIGH</div>
+      <h2>Silent Staleness — TTL Defined, Never Enforced</h2>
+      <div class="content-body">
+        <div class="grid-2">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="code-block" style="flex: 1;">
+              <pre><span class="code-comment"># config.py — TTL defined</span>
+FRESHNESS_TTL = timedelta(hours=<span class="code-num">6</span>)
+
+<span class="code-comment"># online_store.py — TTL ignored!</span>
+<span class="code-kw">def</span> get_features(customer_id):
+    cursor.execute(<span class="code-str">"""
+      SELECT feature_name, value, computed_at
+      FROM online_features
+      WHERE customer_id = ?
+    """</span>, [customer_id])
+    <span class="code-comment"># No TTL check. Ever.</span></pre>
+            </div>
+            <div class="card red"><h3>Root Cause</h3><p>FRESHNESS_TTL is imported only in <span class="mono">offline_store.py</span>. The import was never added to the online serving path. A code divergence, not a config issue.</p></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="stat-box" style="text-align:left; padding: 22px 28px;">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;"><span style="font-size:26px;">✅</span><strong style="color:#059669; font-size:18px;">What dashboard.py REPORTS</strong></div>
+              <p class="mono" style="color:#334155; font-size:15px; line-height: 1.8;">Uptime: 100%<br>Avg latency: 0.29 ms</p>
+            </div>
+            <div class="stat-box" style="text-align:left; padding: 22px 28px; border:1px solid #fca5a5; background:#fff1f2;">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;"><span style="font-size:26px;">❌</span><strong style="color:#e11d48; font-size:18px;">What it DOESN'T REPORT</strong></div>
+              <p class="mono" style="color:#9f1239; font-size:15px; line-height: 1.8;">Feature drift: [SILENT]<br>Stale features: [SILENT]<br>Staleness rate: [SILENT]</p>
+            </div>
+            <div class="card amber"><h3>Known Incident Link</h3><p>The support ticket about "credit adjustment reflecting outdated patterns with no errors" maps precisely to this: stale features served silently.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 01 — RISK 2: SILENT STALENESS</span><span class="slide-num">6 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: RISK 3 -->
+  <div class="slide" data-notes="O terceiro risco combina blast radius e monitoramento cego. Qualquer mudança no código de feature afeta todos os modelos downstream simultaneamente. E o monitoramento atual mede saúde da API, não qualidade dos dados. Analogia útil: é como ter um detector de fumaça que só detecta incêndios depois que o prédio desabou.">
+    <div class="content-wrapper">
+      <div class="label">Risk 3 — HIGH</div>
+      <h2>Blast Radius + Blind Monitoring</h2>
+      <div class="content-body">
+        <div class="grid-2">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card red"><div class="card-icon">💥</div><h3>No Deployment Isolation</h3><p>A single feature code change propagates to <strong>4 credit models across 2 countries</strong> simultaneously. No feature versioning, no canary, no shadow mode.</p></div>
+            <div class="card red"><div class="card-icon">📉</div><h3>No Rollback Path</h3><p>No rollback playbook. No defined SLA for reverting a feature change. Incident response relies on tribal knowledge.</p></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card amber"><div class="card-icon">📊</div><h3>Monitoring Measures the Wrong Thing</h3><p>Current: API uptime + P95 latency.<br><strong>Not measured:</strong> PSI/drift, parity, staleness rate, schema changes, lineage breaks.</p></div>
+            <div class="card sky"><div class="card-icon">🔗</div><h3>Lineage Gap Under Data Mesh</h3><p>No pipeline_version, git_sha, or run_id attached to feature writes. Incident tracing is nearly impossible.</p></div>
+          </div>
+        </div>
+        <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:12px; padding:18px 24px; margin-top: 8px;">
+          <strong style="color:#d97706; font-size:17px;">Combined Failure Scenario:</strong>
+          <p style="margin-top:6px; color:#92400e;">Team A ships formula change → Deploys silently to 4 models → PSI spikes, monitoring misses it → Support ticket 48h later → Root cause untraceable (no lineage).</p>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 01 — RISK 3: BLAST RADIUS + MONITORING</span><span class="slide-num">7 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: RISK SUMMARY -->
+  <div class="slide" data-notes="Resumo executivo dos riscos para audiência não-técnica. O ponto de encerramento desta seção: estes 3 riscos são materiais e específicos para feature stores — não são riscos genéricos de qualquer sistema de ML.">
+    <div class="content-wrapper">
+      <div class="label">Risk Landscape — Summary</div>
+      <h2>Risk Summary</h2>
+      <div class="content-body" style="justify-content: flex-start; gap: 20px;">
+        <table>
+          <tr><th>Risk</th><th>Severity</th><th>Root Cause (Observed)</th><th>Impact</th></tr>
+          <tr><td><strong>Training/Serving Skew</strong></td><td class="center"><span class="risk-badge badge-critical">Critical</span></td><td>Formula divergence: offline=weighted avg, online=simple avg</td><td>14% customers → different credit decision</td></tr>
+          <tr><td><strong>Silent Staleness</strong></td><td class="center"><span class="risk-badge badge-high">High</span></td><td>TTL config never imported in online serving path</td><td>Stale features served to real-time model silently</td></tr>
+          <tr><td><strong>Blast Radius</strong></td><td class="center"><span class="risk-badge badge-high">High</span></td><td>No versioning, no canary, no rollback playbook</td><td>One bad deploy: 4 models × 2 countries</td></tr>
+          <tr><td><strong>Blind Monitoring</strong></td><td class="center"><span class="risk-badge badge-high">High</span></td><td>Only uptime/latency measured</td><td>Silent degradation goes undetected indefinitely</td></tr>
+          <tr><td><strong>Lineage Gap</strong></td><td class="center"><span class="risk-badge badge-medium">Medium</span></td><td>No pipeline_version/git_sha in feature writes</td><td>Incident tracing &amp; regulatory explainability blocked</td></tr>
+        </table>
+        <div style="background:#f0f9ff; border:1px solid #7dd3fc; border-radius:12px; padding:20px 24px; margin-top: 8px;">
+          <p><strong style="color:#0369a1;">Overall Assessment:</strong> Compass presents material, feature-store-specific risks that require a formal remediation plan before expansion. The proposed changes would significantly increase exposure.</p>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 01 — RISK SUMMARY</span><span class="slide-num">8 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: SECTION 2 -->
+  <div class="slide slide-section" data-notes="Mudança de registro: saímos do 'o que encontrei' e entramos no 'como eu avaliaria formalmente'. A mensagem: uma revisão formal independente não é só rodar testes — é ter critérios de pass/fail definidos com antecedência, e um processo reproduzível.">
+    <div class="content-wrapper" style="align-items: center; text-align: center;">
+      <div class="section-num">02</div>
+      <div class="section-label">Section 02</div>
+      <h2>Assessment Approach</h2>
+      <p style="text-align: center;">If running a formal independent review of Compass, what would I actually check, and how would I decide whether it's fit for purpose?</p>
+      <div style="margin-top: 36px; display: flex; gap: 16px; flex-wrap: wrap; max-width: 800px; justify-content: center;">
+        <span style="background:#e0f2fe; color:#0369a1; padding:10px 24px; border-radius:999px; font-size:15px; font-weight:700; box-shadow:0 2px 8px rgba(3,105,161,0.1);">P1 — Parity Tests</span>
+        <span style="background:#dcfce7; color:#059669; padding:10px 24px; border-radius:999px; font-size:15px; font-weight:700; box-shadow:0 2px 8px rgba(5,150,105,0.1);">P2 — Drift Detection</span>
+        <span style="background:#fef3c7; color:#d97706; padding:10px 24px; border-radius:999px; font-size:15px; font-weight:700; box-shadow:0 2px 8px rgba(217,119,6,0.1);">P3 — Deploy Safety</span>
+        <span style="background:#f3e8ff; color:#7e22ce; padding:10px 24px; border-radius:999px; font-size:15px; font-weight:700; box-shadow:0 2px 8px rgba(126,34,206,0.1);">P4 — Data Quality</span>
+        <span style="background:#fee2e2; color:#e11d48; padding:10px 24px; border-radius:999px; font-size:15px; font-weight:700; box-shadow:0 2px 8px rgba(225,29,72,0.1);">P5 — Governance</span>
+      </div>
+    </div>
+    <div class="slide-footer" style="width: 100%; position: absolute; bottom: 48px; left: 0; padding: 0 80px;"><span>SECTION 02 — ASSESSMENT APPROACH</span><span class="slide-num">9 / 22</span></div>
+  </div>
+
+  <!-- SLIDE 10: P1 + P2 -->
+  <div class="slide" data-notes="Pilar 1 — Paridade: o teste mais básico e mais crítico. Computar via batch E via streaming, e comparar. Threshold de PASS pré-definido. Pilar 2 — Drift: comparar valores atuais com distribuição de 30 dias atrás. O ponto importante: definir os thresholds ANTES de rodar o teste.">
+    <div class="content-wrapper">
+      <div class="label">Assessment — Pillars 1 &amp; 2</div>
+      <h2>P1: Feature Parity · P2: Drift Detection</h2>
+      <div class="content-body">
+        <div class="grid-2">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card sky"><h3>P1 — Offline/Online Parity</h3><p>For every feature, compute via batch AND streaming path. Compare distributions with KS-test + PSI.</p></div>
+            <div class="code-block" style="flex:1;">
+              <pre><span class="code-kw">def</span> parity_test(off_vals, on_vals):
+    ks_stat, p = ks_2samp(off_vals, on_vals)
+    psi = compute_psi(off_vals, on_vals)
+    delta_pct = mean(abs(off-on)/off*<span class="code-num">100</span>)
+    <span class="code-kw">return</span> {
+      <span class="code-str">'PASS'</span>: psi &lt; <span class="code-num">0.10</span> <span class="code-kw">and</span> p &gt; <span class="code-num">0.05</span>
+                  <span class="code-kw">and</span> delta_pct &lt; <span class="code-num">5</span>
+    }</pre>
+            </div>
+            <div style="background:#fef9c3; border-radius:10px; padding:16px 20px; border:1px solid #fde047;">
+              <p style="font-size:14px; color:#a16207;"><strong>Compass result:</strong> PSI=0.08 (borderline), p=0.002 → FAIL. 14% decision flip rate.</p>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card green"><h3>P2 — Drift Detection</h3><p>Sliding window PSI: compare today's distribution vs. 30-day baseline. Thresholds pre-defined.</p></div>
+            <div class="code-block" style="flex:1;">
+              <pre><span class="code-comment"># Sliding window PSI (30d baseline)</span>
+<span class="code-kw">for</span> feature <span class="code-kw">in</span> features:
+    baseline = store.query(end=today-30d)
+    current  = store.query(start=today-7d)
+    psi = compute_psi(baseline, current)
+    <span class="code-kw">if</span> psi &gt; <span class="code-num">0.25</span>: flag_for_review(feature)</pre>
+            </div>
+            <div style="background:#f0fdf4; border-radius:10px; padding:16px 20px; border:1px solid #86efac;">
+              <p style="font-size:14px; color:#166534; line-height: 1.7;"><strong>RAG Thresholds:</strong><br>PSI 0–0.10: Stable ✅<br>PSI 0.10–0.25: Monitor ⚠️<br>PSI &gt;0.25: Investigate 🚨</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 02 — P1 &amp; P2</span><span class="slide-num">10 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: P3 + P4 + P5 -->
+  <div class="slide" data-notes="Pilar 3 — Deploy Safety: simular um deploy ruim e ver o que acontece. Pilar 4 — Qualidade: checar nulos, ranges, staleness. Pilar 5 — Governance: owners, contratos e SLAs. Se nenhuma feature T1 tiver os 3, isso sozinho é um finding crítico.">
+    <div class="content-wrapper">
+      <div class="label">Assessment — Pillars 3, 4 &amp; 5</div>
+      <h2>P3: Deploy Safety · P4: Data Quality · P5: Governance</h2>
+      <div class="content-body">
+        <div class="grid-3">
+          <div class="card amber" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="card-icon">🚀</div><h3>P3 — Deploy Safety</h3>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+              <li style="font-size:14px; color:#475569;">☐ Shadow mode (7d parallel run)</li>
+              <li style="font-size:14px; color:#475569;">☐ Parity gate in CI (&lt;5% delta)</li>
+              <li style="font-size:14px; color:#475569;">☐ Rollback playbook tested</li>
+              <li style="font-size:14px; color:#475569;">☐ Rollback SLA: &lt;15 min</li>
+              <li style="font-size:14px; color:#475569;">☐ Blast radius documented</li>
+            </ul>
+            <div style="background:#fffbeb; border-radius:8px; padding:10px 14px; margin-top:auto;">
+              <p style="font-size:13px; color:#b45309; font-weight:600;">Compass today: 0/5 criteria met</p>
+            </div>
+          </div>
+          <div class="card purple" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="card-icon">🧹</div><h3>P4 — Data Quality</h3>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+              <li style="font-size:14px; color:#475569;">☐ Null rate per feature (&lt;1%)</li>
+              <li style="font-size:14px; color:#475569;">☐ Value range violations</li>
+              <li style="font-size:14px; color:#475569;">☐ Staleness rate (%&gt;TTL)</li>
+              <li style="font-size:14px; color:#475569;">☐ Freshness SLA compliance</li>
+              <li style="font-size:14px; color:#475569;">☐ Schema consistency</li>
+            </ul>
+            <div style="background:#faf5ff; border-radius:8px; padding:10px 14px; margin-top:auto;">
+              <p style="font-size:13px; color:#7e22ce; font-weight:600;">Gap: none monitored today</p>
+            </div>
+          </div>
+          <div class="card" style="display:flex; flex-direction:column; gap:12px; border-color:#0f172a;">
+            <div class="card-icon">🏛️</div><h3>P5 — Governance</h3>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+              <li style="font-size:14px; color:#475569;">☐ Feature owner identified</li>
+              <li style="font-size:14px; color:#475569;">☐ Contract (formula, version)</li>
+              <li style="font-size:14px; color:#475569;">☐ Freshness SLA per tier</li>
+              <li style="font-size:14px; color:#475569;">☐ Lineage metadata (git_sha)</li>
+              <li style="font-size:14px; color:#475569;">☐ Change review process</li>
+            </ul>
+            <div style="background:#f0f9ff; border-radius:8px; padding:10px 14px; margin-top:auto;">
+              <p style="font-size:13px; color:#0369a1; font-weight:600;">Gap: no registry, no contracts</p>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff1f2; border-radius:12px; padding:18px 24px; border:1px solid #fca5a5; margin-top: 8px;">
+          <strong style="color:#e11d48; font-size:16px;">Fit for Purpose Verdict:</strong>
+          <span style="color:#9f1239; font-size:15px; margin-left:8px;">Compass is NOT fit for expansion to real-time autonomous credit decisions. P3+P4+P5 all failing. Remediation plan required before proceeding.</span>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 02 — P3, P4 &amp; P5</span><span class="slide-num">11 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: SECTION 3 -->
+  <div class="slide slide-section" data-notes="Posição sobre as mudanças. Para a mudança 1 (top-ups real-time sem revisão humana), a resposta é PAUSE. Para a mudança 2 (review mais leve), a resposta é PROCEED WITH CONDITIONS.">
+    <div class="content-wrapper" style="align-items: center; text-align: center;">
+      <div class="section-num">03</div>
+      <div class="section-label">Section 03</div>
       <h2>Position on Proposed Changes</h2>
-      
-      <div class="split" style="margin-top: 40px;">
-        <div>
-          <div class="big-stat" style="color: #ef4444; margin-bottom: 24px;"><div class="val">PAUSE</div><div class="lbl">Change 1: Real-time top-ups</div></div>
-          <p style="font-size: 18px;"><strong>Reasoning:</strong> Automating financial decisions on top of mathematically skewed and silently stale data creates unacceptable regulatory and financial exposure.</p>
-          <p style="font-size: 16px; margin-top: 16px; color: #64748b;"><strong>Path to unlock:</strong> Enforce TTL at read-time and unify the formula logic before proceeding.</p>
+      <p style="text-align: center;">Two proposed changes are on the table. My independent view — specific, reasoned, and communicable to teams under delivery pressure.</p>
+      <div style="margin-top: 40px; display: flex; gap: 24px; width: 100%; max-width: 900px;">
+        <div class="verdict pause" style="flex:1; flex-direction: column; text-align: center; padding: 40px 32px;">
+          <div class="verdict-label" style="font-size: 32px; margin-bottom: 8px;">PAUSE</div>
+          <p style="margin: 0;">Change 1 — Real-time top-ups, no human review</p>
         </div>
-        
-        <div>
-          <div class="big-stat" style="color: #10b981; margin-bottom: 24px;"><div class="val">PROCEED</div><div class="lbl">Change 2: Lighter feature review</div></div>
-          <p style="font-size: 18px;"><strong>Reasoning:</strong> Human review is a bottleneck, not a guarantee of safety. We can ship faster <em>and</em> govern better by replacing manual checks with automated parity gates.</p>
-          <p style="font-size: 16px; margin-top: 16px; color: #64748b;"><strong>Condition:</strong> Hard CI gate that blocks merge if Offline vs Online PSI > 0.10.</p>
+        <div class="verdict conditions" style="flex:1; flex-direction: column; text-align: center; padding: 40px 32px;">
+          <div class="verdict-label" style="font-size: 32px; margin-bottom: 8px;">PROCEED W/ CONDITIONS</div>
+          <p style="margin: 0;">Change 2 — Lighter review for feature code</p>
         </div>
       </div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-5">5 / 8</span></div>
+    <div class="slide-footer" style="width: 100%; position: absolute; bottom: 48px; left: 0; padding: 0 80px;"><span>SECTION 03 — POSITION ON CHANGES</span><span class="slide-num">12 / 22</span></div>
   </div>
 
-  <!-- SLIDE 6: FRAMEWORK THINKING -->
-  <div class="slide" data-notes="How do we scale this across teams with uneven maturity (Data Mesh)? The principle is: Standardize the Contract, not the Implementation. We force teams to guarantee output schemas and freshness SLAs, but let them choose Spark vs Flink. We drive adoption via a 'Paved Road SDK' that makes compliance the easiest path.">
-    <div>
-      <div class="kicker">05. Framework Thinking at Scale</div>
-      <h2>Governing a Data Mesh</h2>
-      <p style="margin-bottom: 40px;">You cannot force identical engineering maturity across all domains. Governance must focus on interoperability, not implementation.</p>
-      
-      <div class="box">
-        <h3 style="color: #0072B2;">Principle: Standardize the Contract, not the Code</h3>
-        <ul class="clean-list" style="margin-top: 24px;">
-          <li><strong>Org-Wide Mandates (The Contract):</strong> Every feature must have a registered schema, a freshness SLA, and pass the automated Parity/PSI gate in CI.</li>
-          <li><strong>Domain Autonomy (The Implementation):</strong> Teams choose their compute engine (Spark, Flink, dbt) and window strategies, as long as the contract is met.</li>
-          <li><strong>Adoption Incentive:</strong> Provide a "Paved Road SDK" that includes out-of-the-box parity tests and monitoring. Compliance must be easier than non-compliance.</li>
-        </ul>
+  <!-- SLIDE 13: CHANGE 1 -->
+  <div class="slide" data-notes="Mudança 1: PAUSE. Não podemos ter um sistema com 14% de taxa de decisão errada tomando decisões financeiras autônomas. Apresentar os 4 gates concretos para destravar isso (prazo de 3-4 semanas).">
+    <div class="content-wrapper">
+      <div class="label">Change 1 — Real-Time Top-Ups Without Human Review</div>
+      <h2>Position: <span style="color:#D55E00;">PAUSE</span></h2>
+      <div class="content-body">
+        <div class="verdict pause" style="margin-bottom: 12px; padding: 24px 32px;">
+          <div class="verdict-icon">🛑</div>
+          <div>
+            <div class="verdict-label" style="font-size: 24px;">PAUSE — Remediation Required First</div>
+            <p>14% decision-flip rate + silent staleness + zero data quality monitoring = unacceptable for autonomous real-time financial decisions.</p>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:16px; color:#64748b; font-size:14px; letter-spacing:1.5px; text-transform:uppercase;">Required Gates to Unlock — Est. 3–4 Weeks</h3>
+          <ul class="gate-list">
+            <li><div class="gate-num">1</div><div><strong style="color:#0f172a;">Resolve formula divergence (Risk 1)</strong> — Reconcile offline/online computation, parity test suite, confirm PSI &lt;0.05 over 7-day shadow run.</div></li>
+            <li><div class="gate-num">2</div><div><strong style="color:#0f172a;">Enforce TTL at read path (Risk 2)</strong> — Add freshness check in online_store.py, alert on breach, confirm &lt;1% stale rate in prod.</div></li>
+            <li><div class="gate-num">3</div><div><strong style="color:#0f172a;">Deploy data quality KRI dashboard</strong> — PSI, staleness, parity delta visible and alerting before go-live.</div></li>
+            <li><div class="gate-num">4</div><div><strong style="color:#0f172a;">Shadow mode validation (7 days)</strong> — Run new pipeline in parallel, confirm parity before cutover. Rollback playbook tested (&lt;15 min).</div></li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 03 — CHANGE 1: PAUSE</span><span class="slide-num">13 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: CHANGE 2 -->
+  <div class="slide" data-notes="Mudança 2: PROCEED WITH CONDITIONS. O benefício de agilidade é genuíno. Substituir revisão humana pesada por verificações automatizadas rigorosas. Resultado esperado: 5-7 dias → 1-2 dias.">
+    <div class="content-wrapper">
+      <div class="label">Change 2 — Lighter Review for Feature Transformation Code</div>
+      <h2>Position: <span style="color:#E69F00;">Proceed with Conditions</span></h2>
+      <div class="content-body">
+        <div class="verdict conditions" style="margin-bottom: 12px; padding: 24px 32px;">
+          <div class="verdict-icon">🟡</div>
+          <div>
+            <div class="verdict-label" style="font-size: 24px;">PROCEED WITH CONDITIONS</div>
+            <p>Blast radius is real but mitigatable. Human review bottleneck can be replaced by automated verification that's actually more rigorous.</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <h3 style="margin-bottom:12px; color:#64748b; font-size:14px; letter-spacing:1.5px; text-transform:uppercase;">Automated Gate Requirements</h3>
+            <ul class="gate-list">
+              <li><div class="gate-num">1</div><div><strong>Parity test in CI</strong> — Every commit runs parity suite. &lt;5% delta = PASS. Hard fail blocks merge.</div></li>
+              <li><div class="gate-num">2</div><div><strong>PSI check at deploy</strong> — Distribution comparison before/after. PSI &gt;0.10 blocks deployment automatically.</div></li>
+              <li><div class="gate-num">3</div><div><strong>Shadow deploy (T1 changes)</strong> — 7-day parallel run before cutover.</div></li>
+              <li><div class="gate-num">4</div><div><strong>Rollback playbook</strong> — Tested, documented, &lt;15 min SLA.</div></li>
+            </ul>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div class="card green"><h3>Expected Outcome</h3><p>Review cycle: <strong style="color:#059669;">5–7 days → 1–2 days</strong> for most changes, with higher automated rigor than today's manual process.</p></div>
+            <div class="card amber"><h3>Communicating to Teams</h3><p>Frame as <em>acceleration</em>, not governance. Gates are the prerequisite for speed — not the opposite of it.</p></div>
+            <div style="background:#f8fafc; border-radius:12px; padding:18px 22px; border:1px solid #cbd5e1;">
+              <p style="font-size:14px; color:#475569;"><strong style="color:#334155;">Scope:</strong> Lighter review applies to changes within existing schema contracts. New features or formula changes still require full review.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 03 — CHANGE 2: PROCEED WITH CONDITIONS</span><span class="slide-num">14 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: SECTION 4 -->
+  <div class="slide slide-section" data-notes="O que colocar permanentemente no lugar independentemente do resultado das mudanças. Apresento 3 controles com uma lógica clara: cada um captura uma categoria diferente de risco, e para cada um tenho um critério claro de 'está funcionando'.">
+    <div class="content-wrapper" style="align-items: center; text-align: center;">
+      <div class="section-num">04</div>
+      <div class="section-label">Section 04</div>
+      <h2>Governance Foundations</h2>
+      <p style="text-align: center;">Regardless of the proposed changes — what are the 3 most important controls Solara must put in place for Compass?</p>
+      <div style="margin-top: 36px; display: flex; gap: 16px; flex-wrap: wrap; max-width: 800px; justify-content: center;">
+        <span style="background:#e0f2fe; color:#0369a1; padding:12px 28px; border-radius:999px; font-size:16px; font-weight:700; box-shadow:0 2px 8px rgba(3,105,161,0.1);">1 — Feature Contract &amp; Schema Registry</span>
+        <span style="background:#dcfce7; color:#059669; padding:12px 28px; border-radius:999px; font-size:16px; font-weight:700; box-shadow:0 2px 8px rgba(5,150,105,0.1);">2 — Organizational KRI Stack</span>
+        <span style="background:#f3e8ff; color:#7e22ce; padding:12px 28px; border-radius:999px; font-size:16px; font-weight:700; box-shadow:0 2px 8px rgba(126,34,206,0.1);">3 — Safe Deployment Protocol</span>
       </div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-6">6 / 8</span></div>
+    <div class="slide-footer" style="width: 100%; position: absolute; bottom: 48px; left: 0; padding: 0 80px;"><span>SECTION 04 — GOVERNANCE FOUNDATIONS</span><span class="slide-num">15 / 22</span></div>
   </div>
 
-  <!-- SLIDE 7: AI TRANSPARENCY -->
-  <div class="slide" data-notes="As requested, transparency on AI usage. I used AI as a pair-programmer to scaffold this HTML structure and format the layout. However, the core analysis—identifying the exact code lines where EWMA diverges from Batch, making the PAUSE call, and designing the Data Mesh framework—is entirely my independent judgment.">
-    <div>
-      <div class="kicker">06. Methodology</div>
+  <!-- SLIDE 16: CONTROL 1 -->
+  <div class="slide" data-notes="Controle 1: Um Feature Contract define nome, fórmula, owner, versão, range de valores, SLA. Sem isso, o Risk 1 pode acontecer repetidamente. O critério de funcionamento: cobertura de contratos em features T1 maior que 95% medida mensalmente.">
+    <div class="content-wrapper">
+      <div class="label">Control 1 — Catch: Formula Drift + Lineage Breaks</div>
+      <h2>Feature Contract &amp; Schema Registry</h2>
+      <div class="content-body">
+        <div class="grid-2">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card sky"><h3>What It Is</h3><p>Machine-readable contract per feature: name, formula, owner, version, value range, freshness SLA, downstream consumers. Stored in versioned registry.</p></div>
+            <div class="code-block" style="flex:1;">
+              <pre><span class="code-comment"># feature_contract.yaml</span>
+name: <span class="code-str">txn_avg_30d</span>
+version: <span class="code-str">2.1.0</span>
+owner: <span class="code-str">credit-underwriting-team</span>
+formula: <span class="code-str">weighted_mean(amount, abs_value)</span>
+value_range: [<span class="code-num">0</span>, <span class="code-num">50000</span>]
+freshness_SLA: <span class="code-str">T1</span>  <span class="code-comment"># &lt;1h</span>
+consumers: [credit_model_v3, topup_model_v1]</pre>
+            </div>
+            <div class="card green"><h3>What It Catches</h3><p>Formula divergence between paths. Unauthorized schema changes. Consumers using deprecated feature versions unknowingly.</p></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card" style="flex:1;"><h3>How It Works</h3>
+              <ul style="list-style:none; display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+                <li style="display:flex; gap:12px; font-size:14px; color:#334155;"><span>📋</span><span>Feature must have signed contract before serving to T1 models</span></li>
+                <li style="display:flex; gap:12px; font-size:14px; color:#334155;"><span>🔒</span><span>CI gate validates: code formula matches contract formula</span></li>
+                <li style="display:flex; gap:12px; font-size:14px; color:#334155;"><span>🔄</span><span>Schema changes require version bump + contract review</span></li>
+                <li style="display:flex; gap:12px; font-size:14px; color:#334155;"><span>📜</span><span><span class="mono">run_id, git_sha, pipeline_version</span> written to every feature row</span></li>
+              </ul>
+            </div>
+            <div style="background:#f0f9ff; border-radius:12px; padding:22px 26px; border:1px solid #bae6fd;">
+              <h3 style="color:#0369a1; margin-bottom:12px;">How I Know It's Working</h3>
+              <ul style="list-style:none; display:flex; flex-direction:column; gap:8px;">
+                <li style="font-size:14px; color:#0c4a6e; font-weight:500;">✅ T1 feature contract coverage ≥ 95% (monthly KRI)</li>
+                <li style="font-size:14px; color:#0c4a6e; font-weight:500;">✅ 0 formula-mismatch incidents since rollout</li>
+                <li style="font-size:14px; color:#0c4a6e; font-weight:500;">✅ Mean time to trace incident &lt; 30 min (via lineage)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 04 — CONTROL 1</span><span class="slide-num">16 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 17: CONTROL 2 -->
+  <div class="slide" data-notes="O KRI Stack. Proponho 5 KRIs que cobrem os 3 riscos. Thresholds RAG pré-definidos e alertas automáticos. Critério de funcionamento: nenhum KRI pode ficar em RED por mais de 2 horas sem uma ação documentada.">
+    <div class="content-wrapper">
+      <div class="label">Control 2 — Catch: Silent Data Quality Degradation</div>
+      <h2>Organizational KRI Stack</h2>
+      <div class="content-body">
+        <table>
+          <tr><th>KRI</th><th>Measures</th><th>Green</th><th>Amber</th><th>Red (Auto-Alert)</th></tr>
+          <tr><td><strong>KRI-1 Feature Drift (PSI)</strong></td><td>Distribution shift vs. 30d baseline</td><td class="center">&lt;0.10</td><td class="center">0.10–0.25</td><td class="center" style="color:#e11d48; font-weight:700;">&gt;0.25 → block</td></tr>
+          <tr><td><strong>KRI-2 Staleness Breach Rate</strong></td><td>% features served beyond TTL</td><td class="center">&lt;1%</td><td class="center">1–5%</td><td class="center" style="color:#e11d48; font-weight:700;">&gt;5% → page on-call</td></tr>
+          <tr><td><strong>KRI-3 Parity Delta (P95)</strong></td><td>Value delta batch vs. streaming</td><td class="center">&lt;2%</td><td class="center">2–5%</td><td class="center" style="color:#e11d48; font-weight:700;">&gt;5% → block T1</td></tr>
+          <tr><td><strong>KRI-4 Null Rate</strong></td><td>Missing values per feature</td><td class="center">&lt;0.1%</td><td class="center">0.1–1%</td><td class="center" style="color:#e11d48; font-weight:700;">&gt;1% → investigate</td></tr>
+          <tr><td><strong>KRI-5 Contract Coverage</strong></td><td>% T1 features with contracts</td><td class="center">≥95%</td><td class="center">85–95%</td><td class="center" style="color:#e11d48; font-weight:700;">&lt;85% → escalate</td></tr>
+        </table>
+        <div class="grid-2" style="margin-top: 8px;">
+          <div style="background:#ecfdf5; border-radius:12px; padding:20px 24px; border:1px solid #a7f3d0;">
+            <h3 style="color:#059669; margin-bottom:10px;">How I Know It's Working</h3>
+            <p style="font-size:14px; color:#064e3b; line-height: 1.6;">All 5 KRIs in real-time dashboard with automated alerting. No KRI remains RED for &gt;2h without documented response. Monthly trend review.</p>
+          </div>
+          <div style="background:#fffbeb; border-radius:12px; padding:20px 24px; border:1px solid #fde68a;">
+            <h3 style="color:#d97706; margin-bottom:10px;">Avoiding Alert Fatigue</h3>
+            <p style="font-size:14px; color:#92400e; line-height: 1.6;">Amber band calibrated to create urgency without noise. Thresholds reviewed quarterly against actual incident data — not set and forgotten.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 04 — CONTROL 2: KRI STACK</span><span class="slide-num">17 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 18: CONTROL 3 -->
+  <div class="slide" data-notes="Controle 3 trata o blast radius. Shadow mode, parity gate no CI, rollback testado. O critério de funcionamento é concreto: Mean Time to Revert abaixo de 15 minutos.">
+    <div class="content-wrapper">
+      <div class="label">Control 3 — Catch: Deployment Blast Radius</div>
+      <h2>Safe Deployment Protocol</h2>
+      <div class="content-body">
+        <div class="grid-2">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card" style="border-color:#0f172a;"><h3>Shadow Mode (7-day min for T1)</h3><p style="margin-top:8px;">New versions run in parallel for 7 days. KRI-3 evaluated daily. Cutover only after 7 consecutive GREEN days.</p></div>
+            <div class="card sky"><h3>CI Parity Gate (all changes)</h3><p style="margin-top:8px;">Every commit triggers parity test. Hard fail blocks merge if PSI &gt;0.10 or delta &gt;5%.</p></div>
+            <div class="card green"><h3>Rollback Playbook — &lt;15 min SLA</h3><p style="margin-top:8px;">Documented runbook, tested quarterly in fire drills. Covers all 4 downstream models.</p></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="background:#0f172a; border-radius:14px; padding:28px 32px; flex:1; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+              <div class="notes-header" style="color:#38bdf8;">DEPLOYMENT FLOW</div>
+              <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+                <div style="background:rgba(255,255,255,0.06); border-radius:8px; padding:12px 16px; border-left: 3px solid #38bdf8;"><p style="color:#f8fafc; font-size:14px;">1. <strong style="color:#38bdf8;">Submit</strong> — Feature change + contract diff</p></div>
+                <div style="background:rgba(255,255,255,0.06); border-radius:8px; padding:12px 16px; border-left: 3px solid #34d399;"><p style="color:#f8fafc; font-size:14px;">2. <strong style="color:#34d399;">CI Gate</strong> — Parity test + PSI check (auto)</p></div>
+                <div style="background:rgba(255,255,255,0.06); border-radius:8px; padding:12px 16px; border-left: 3px solid #fbbf24;"><p style="color:#f8fafc; font-size:14px;">3. <strong style="color:#fbbf24;">Shadow Run</strong> — 7 days parallel (T1 changes)</p></div>
+                <div style="background:rgba(255,255,255,0.06); border-radius:8px; padding:12px 16px; border-left: 3px solid #c084fc;"><p style="color:#f8fafc; font-size:14px;">4. <strong style="color:#c084fc;">KRI Review</strong> — All 5 KRIs GREEN for 48h</p></div>
+                <div style="background:rgba(255,255,255,0.06); border-radius:8px; padding:12px 16px; border-left: 3px solid #fb7185;"><p style="color:#f8fafc; font-size:14px;">5. <strong style="color:#fb7185;">Rollback Ready</strong> — Playbook active</p></div>
+              </div>
+            </div>
+            <div style="background:#f0f9ff; border-radius:12px; padding:18px 24px; border:1px solid #bae6fd;">
+              <h3 style="color:#0369a1; margin-bottom:8px;">How I Know It's Working</h3>
+              <p style="font-size:14px; color:#0c4a6e; font-weight:500; line-height: 1.6;">MTTR &lt;15 min.<br>0 blast radius incidents post-rollout.<br>Quarterly fire drill with documented outcome.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>SECTION 04 — CONTROL 3: SAFE DEPLOYMENT</span><span class="slide-num">18 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 19: DATA MESH -->
+  <div class="slide" data-notes="Questão 2 — como escalar a governança para Data Mesh. A chave: padronizamos o contrato de interoperabilidade (o OUTPUT garantido), não a implementação. Três camadas: org-wide standards, domain autonomy, e incentivos de adoção (Paved Road SDK).">
+    <div class="content-wrapper">
+      <div class="label">Q2 — Data Mesh Governance</div>
+      <h2>What to Standardize vs. Leave to Teams</h2>
+      <div class="content-body">
+        <div class="grid-2">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="background:#ecfdf5; border-radius:14px; padding:24px 28px; border:2px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.05);">
+              <h3 style="color:#047857; font-size: 20px;">🔒 Standardize Org-Wide</h3>
+              <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+                <li style="font-size:14px; color:#064e3b; font-weight:500;">📋 Feature Contract schema (output guarantees)</li>
+                <li style="font-size:14px; color:#064e3b; font-weight:500;">⏱️ Freshness SLA tiers (T1 &lt;1h, T2 &lt;6h)</li>
+                <li style="font-size:14px; color:#064e3b; font-weight:500;">📊 5 mandatory KRIs with fixed thresholds</li>
+                <li style="font-size:14px; color:#064e3b; font-weight:500;">🚦 Change gates (shadow, parity CI, rollback)</li>
+                <li style="font-size:14px; color:#064e3b; font-weight:500;">📜 Lineage metadata (git_sha, run_id)</li>
+              </ul>
+            </div>
+            <div style="background:#fffbeb; border-radius:14px; padding:24px 28px; border:2px solid #f59e0b; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.05);">
+              <h3 style="color:#b45309; font-size: 20px;">🧩 Leave to Domain Teams</h3>
+              <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+                <li style="font-size:14px; color:#78350f; font-weight:500;">⚙️ Pipeline implementation (Spark, Flink, dbt)</li>
+                <li style="font-size:14px; color:#78350f; font-weight:500;">🗄️ Storage technology (within SLA)</li>
+                <li style="font-size:14px; color:#78350f; font-weight:500;">📐 Window sizes (domain expertise)</li>
+                <li style="font-size:14px; color:#78350f; font-weight:500;">🔧 Compute schedule</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card sky" style="flex:1;">
+              <h3 style="font-size: 20px;">Driving Adoption Without Authority</h3>
+              <ul style="list-style:none; display:flex; flex-direction:column; gap:14px; margin-top:16px;">
+                <li style="font-size:14.5px; color:#334155; line-height:1.5;"><strong>🛠️ Paved Road SDK</strong> — Compliant template, tests included. Compliance is not extra work.</li>
+                <li style="font-size:14.5px; color:#334155; line-height:1.5;"><strong>📈 Public KRI Dashboard</strong> — RED teams blocked from T1. GREEN teams recognized.</li>
+                <li style="font-size:14.5px; color:#334155; line-height:1.5;"><strong>🤝 Risk Champions Embedded</strong> — Partners in teams, not auditors.</li>
+                <li style="font-size:14.5px; color:#334155; line-height:1.5;"><strong>⚖️ Asymmetric Consequences</strong> — Unregistered features hard-gated at T1.</li>
+              </ul>
+            </div>
+            <div style="background:#f0f9ff; border-radius:12px; padding:20px 24px; border:1px solid #7dd3fc;">
+              <h3 style="color:#0369a1; margin-bottom:8px;">Core Principle</h3>
+              <p style="font-size:15px; color:#0c4a6e; font-style:italic; font-weight:500;">"Standardize the interoperability contract — what the output must guarantee — not the implementation."</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>Q2 — DATA MESH GOVERNANCE</span><span class="slide-num">19 / 22</span></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 20: AI TRANSPARENCY -->
+  <div class="slide slide-section" data-notes="Este slide aborda a exigência explícita de transparência sobre o uso de IA. Mostra maturidade em reconhecer a IA como ferramenta de produtividade (pair-programmer), enquanto isola a tomada de decisão crítica (Risk judgment, Framework design) como esforço puramente humano.">
+    <div class="content-wrapper">
+      <div class="label">Methodology &amp; Tooling</div>
       <h2>AI Transparency Statement</h2>
-      <p style="margin-bottom: 40px;">As requested, this deliverable was prepared with the assistance of an AI acting as a pair-programmer.</p>
-      
-      <div class="split">
-        <div class="box">
-          <h3 style="font-size: 18px; color: #64748b; text-transform: uppercase;">AI Contributions (Execution)</h3>
-          <p style="font-size: 16px; margin-top: 16px;">Scaffolded the boilerplate HTML, CSS layouts, and Mermaid.js integration for this slide deck to ensure a clean presentation format.</p>
+      <div class="content-body">
+        <p style="margin-bottom: 12px;">As requested in the case guidelines, this deliverable was prepared with the assistance of an AI coding agent acting as a pair-programmer.</p>
+        <div class="grid-2">
+          <div class="card" style="border-color:#64748b;">
+            <div class="card-icon">🤖</div>
+            <h3 style="color:#475569;">AI Contributions (Execution)</h3>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+              <li style="font-size:14px; color:#475569;">✓ Scaffolded boilerplate HTML and CSS grids for this presentation deck.</li>
+              <li style="font-size:14px; color:#475569;">✓ Wrote the <span class="mono">matplotlib</span> code to generate the charts in the Jupyter notebook.</li>
+              <li style="font-size:14px; color:#475569;">✓ Cleaned up emoji rendering bugs (U+FE0F variation selectors).</li>
+            </ul>
+          </div>
+          <div class="card sky">
+            <div class="card-icon">🧠</div>
+            <h3 style="color:#0369a1;">Human Contributions (Judgment)</h3>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+              <li style="font-size:14px; color:#0f172a; font-weight:500;">✓ Identifying the exact formula skew (Risk 1) and TTL bug (Risk 2) in the live codebase.</li>
+              <li style="font-size:14px; color:#0f172a; font-weight:500;">✓ Formulating the <strong>PAUSE</strong> vs. <strong>PROCEED</strong> verdicts and their 4 required automated gates.</li>
+              <li style="font-size:14px; color:#0f172a; font-weight:500;">✓ Designing the 3 Governance Foundation controls and the Data Mesh framework.</li>
+            </ul>
+          </div>
         </div>
-        <div class="box" style="border-left: 4px solid #0072B2;">
-          <h3 style="font-size: 18px; color: #0f172a; text-transform: uppercase;">Human Contributions (Judgment)</h3>
-          <p style="font-size: 16px; margin-top: 16px;">Cloning the repo, executing the queries to find the 46% skew, identifying the missing TTL in <code>online_store.py</code>, prioritizing the risks, and formulating the specific governance frameworks and PAUSE/PROCEED verdicts.</p>
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:18px 24px; margin-top: 8px;">
+          <p style="font-size:14px; color:#334155; font-style:italic;"><strong>Philosophy:</strong> AI accelerates delivery and formatting (the "how"), but independent risk judgment, system validation, and framework design (the "what" and "why") remain fundamentally human responsibilities.</p>
         </div>
       </div>
+      <div class="slide-footer"><span>METHODOLOGY &amp; TOOLING</span><span class="slide-num">20 / 22</span></div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-7">7 / 8</span></div>
   </div>
 
-  <!-- SLIDE 8: END -->
-  <div class="slide" data-notes="Closing slide. Q&A and 2-minute summary in English.">
-    <div style="text-align: center; width: 100%;">
-      <h1 style="font-size: 80px; margin-bottom: 24px;">Q &amp; A</h1>
-      <p style="margin: 0 auto; text-align: center;">Ready for discussion.<br>Closing recommendation available in English.</p>
+  <!-- SLIDE 21: CLOSING -->
+  <div class="slide" data-notes="Este é o closing slide para os 2 minutos em inglês. Pratique: 'Compass has three material risks... Risk 1 causes 14% of customers to receive different credit decisions... Risk 2 means TTL was never enforced. Change 1 must PAUSE until remediated. Change 2 can proceed with automated gates. These gates are what makes speed safe.'">
+    <div class="content-wrapper">
+      <div class="label">Closing Recommendation — 2-Minute Summary (English)</div>
+      <h2>Independent Risk Verdict</h2>
+      <div class="content-body">
+        <div class="stats-row" style="margin-bottom:20px;">
+          <div class="stat-box"><div class="stat-val">3</div><div class="stat-lbl">Material Risks (Evidence-Based)</div></div>
+          <div class="stat-box" style="border-color:#fca5a5; background:#fff1f2;"><div class="stat-val" style="font-size:30px; color:#e11d48; padding: 4px 0;">PAUSE</div><div class="stat-lbl" style="color:#9f1239;">Change 1 — Real-Time Top-Ups</div></div>
+          <div class="stat-box" style="border-color:#fcd34d; background:#fffbeb;"><div class="stat-val" style="font-size:20px; color:#d97706; padding: 10px 0;">PROCEED<br>w/ Conditions</div><div class="stat-lbl" style="color:#b45309;">Change 2 — Lighter Review</div></div>
+          <div class="stat-box"><div class="stat-val" style="font-size:30px; padding: 4px 0;">3</div><div class="stat-lbl">Controls to Implement Now</div></div>
+        </div>
+        <div class="bullet-list">
+          <li><span>🔴</span><span><strong>Risk 1 (Critical):</strong> Formula divergence — 14% of customers receive different credit decisions depending on serving path. Violates explainability requirements.</span></li>
+          <li><span>🟠</span><span><strong>Risk 2 (High):</strong> TTL configured, never enforced. Stale features served silently. The support ticket about outdated credit adjustments is the observable symptom.</span></li>
+          <li><span>🟡</span><span><strong>Risk 3 (High):</strong> One bad deploy touches 4 credit models × 2 countries with no automated rollback. Monitoring measures latency, not data quality.</span></li>
+        </div>
+        <div style="background:#f0f9ff; border:2px solid #0072B2; border-radius:12px; padding:20px 28px; margin-top:12px;">
+          <p style="font-size:16px; color:#0c4a6e; font-style:italic; font-weight:500;">"The gates required to make Change 2 safe are also what Compass needs to remediate Risk 3. Governance and delivery speed are not in opposition — automated gates are what makes it safe to move faster."</p>
+        </div>
+      </div>
+      <div class="slide-footer"><span>CLOSING RECOMMENDATION</span><span class="slide-num">21 / 22</span></div>
     </div>
-    <div class="footer"><span>COMPASS RISK ASSESSMENT</span><span id="slide-num-8">8 / 8</span></div>
+  </div>
+
+  <!-- SLIDE 22: Q&A -->
+  <div class="slide slide-end" data-notes="Slide de Q&amp;A. Pelo menos 2 perguntas serao em inglês. Prepare-se para: (1) 'Why did you prioritize Risk 1 over Risk 3?' (2) 'How would you communicate the PAUSE position to a product team?' (3) 'What is the MVP of the KRI stack you'd implement in week 1?'">
+    <div class="content-wrapper" style="align-items: center; justify-content: center;">
+      <div class="big-icon">💬</div>
+      <h1>Q &amp; A</h1>
+      <p>Open for your questions — and mine.<br>Closing recommendation available in English on request.</p>
+      <div style="display:flex; gap:28px; justify-content:center; margin-top:48px; flex-wrap:wrap; width: 100%; max-width: 900px;">
+        <div style="flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:24px; text-align:center;">
+          <div style="font-size:28px; margin-bottom:12px;">🌎</div>
+          <div style="color:#94a3b8; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Session language</div>
+          <div style="color:#f8fafc; font-weight:600; font-size:18px; margin-top:6px;">Português · English Q&amp;A</div>
+        </div>
+        <div style="flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:24px; text-align:center;">
+          <div style="font-size:28px; margin-bottom:12px;">📦</div>
+          <div style="color:#94a3b8; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Evidence base</div>
+          <div style="color:#f8fafc; font-weight:600; font-size:18px; margin-top:6px;">Live system · Codebase</div>
+        </div>
+        <div style="flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:24px; text-align:center;">
+          <div style="font-size:28px; margin-bottom:12px;">📊</div>
+          <div style="color:#94a3b8; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Full analysis</div>
+          <div style="color:#f8fafc; font-weight:600; font-size:16px; margin-top:6px; font-family:'JetBrains Mono', monospace;">business_case.ipynb</div>
+        </div>
+      </div>
+      <div style="margin-top: 48px; color: #64748b; font-size: 14px;">
+        <span class="kbd">←</span> <span class="kbd">→</span> Navigate &nbsp;&nbsp;·&nbsp;&nbsp; <span class="kbd">N</span> Toggle Notes &nbsp;&nbsp;·&nbsp;&nbsp; <span class="kbd">F</span> Fullscreen
+      </div>
+      <div class="slide-footer" style="width: 100%; border-top:1px solid rgba(255,255,255,0.1); margin-top:48px; position: absolute; bottom: 48px; left: 0; padding: 16px 80px 0;">
+        <span style="color:rgba(255,255,255,0.3);">COMPASS — INDEPENDENT RISK ASSESSMENT · SOLARA DIGITAL BANK · 2026</span>
+        <span style="color:rgba(255,255,255,0.3);" class="slide-num">22 / 22</span>
+      </div>
+    </div>
   </div>
 
 </div>
 
-<!-- Notes Panel -->
+<!-- SPEAKER NOTES PANEL -->
 <div class="notes-panel" id="notes-panel">
-  <div class="notes-header"><span>SPEAKER NOTES</span><span style="cursor:pointer;" onclick="toggleNotes()">✕ CLOSE (N)</span></div>
+  <div class="notes-header">
+    <span>SPEAKER NOTES &nbsp;·&nbsp; Press <span style="background:#334155; border-radius:3px; padding:2px 6px; color:#f8fafc;">N</span> to toggle</span>
+    <span class="notes-close" onclick="toggleNotes()">✕</span>
+  </div>
   <div id="notes-text"></div>
 </div>
 
-<!-- Controls -->
+<!-- CONTROLS -->
 <div id="controls">
-  <button class="btn" onclick="prevSlide()">Prev</button>
-  <button class="btn" onclick="toggleNotes()">Notes (N)</button>
-  <button class="btn" onclick="nextSlide()">Next</button>
+  <button class="btn" onclick="prevSlide()">← Prev</button>
+  <div class="nav-divider"></div>
+  <span id="slide-counter">1 / 22</span>
+  <div class="nav-divider"></div>
+  <button class="btn btn-primary" onclick="nextSlide()">Next →</button>
+  <div class="nav-divider"></div>
+  <button class="btn btn-notes" id="notes-btn" onclick="toggleNotes()">📝 Speaker Notes</button>
 </div>
 
 <script>
   const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
   let current = 0;
   let notesOpen = false;
 
   function showSlide(n) {
     slides.forEach(s => s.classList.remove('active'));
-    current = (n + slides.length) % slides.length;
+    current = (n + total) % total;
     slides[current].classList.add('active');
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+    document.getElementById('progress-fill').style.width = ((current + 1) / total * 100) + '%';
     if (notesOpen) updateNotes();
   }
 
@@ -304,19 +891,32 @@
   function prevSlide() { showSlide(current - 1); }
 
   function updateNotes() {
-    document.getElementById('notes-text').textContent = slides[current].getAttribute('data-notes') || '';
+    const note = slides[current].getAttribute('data-notes') || 'Sem anotações para este slide.';
+    document.getElementById('notes-text').innerHTML = note;
   }
 
   function toggleNotes() {
     notesOpen = !notesOpen;
-    document.getElementById('notes-panel').classList.toggle('visible', notesOpen);
+    const panel = document.getElementById('notes-panel');
+    const btn = document.getElementById('notes-btn');
+    const controls = document.getElementById('controls');
+    panel.classList.toggle('visible', notesOpen);
+    btn.classList.toggle('active', notesOpen);
+    controls.classList.toggle('notes-open', notesOpen);
     if (notesOpen) updateNotes();
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
-    if (e.key === 'ArrowLeft') prevSlide();
+    // Ignore keydowns if user is typing in an input (not applicable here, but good practice)
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
     if (e.key === 'n' || e.key === 'N') toggleNotes();
+    if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
   });
 
   showSlide(0);
