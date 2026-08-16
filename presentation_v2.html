@@ -202,11 +202,15 @@ graph TB
     subgraph Mon["📊 Monitoring"]
         DASH["dashboard.py\nuptime + avg latency only"]
     end
-    TXN --> BATCH & STREAM
+    TXN --> BATCH
+    TXN --> STREAM
     BATCH -->|"exact 30d mean"| OFFLINE
-    STREAM -->|"EWMA α=0.2"| ONLINE
-    OFFLINE & ONLINE --> FAPI
-    FAPI --> UNDER & INAPP & DASH
+    STREAM -->|"EWMA alpha=0.2"| ONLINE
+    OFFLINE --> FAPI
+    ONLINE --> FAPI
+    FAPI --> UNDER
+    FAPI --> INAPP
+    FAPI --> DASH
       </div>
     </div>
     <div class="row" style="gap:16px">
@@ -270,7 +274,8 @@ flowchart LR
     C -->|batches of 50| D{"customer_id\nin running_avg?"}
     D -->|Yes| E["EWMA Update\n0.2 × amount + 0.8 × prev"]
     D -->|No| F["Seed\nrunning_avg = amount"]
-    E & F --> G["OnlineStore\n.upsert_feature()"]
+    E --> G["OnlineStore\n.upsert_feature()"]
+    F --> G
     G -->|"UPDATE value, computed_at"| H[("online_store.db\nPK: customer_id, feature_name")]
     G -->|UPDATE| I[("pipeline_state\nlast_processed_seq")]
       </div>
@@ -334,7 +339,9 @@ graph TB
         I1["Training/Serving Skew\nhidden covariate shift"]
         I2["Model scores miscalibrated\nfor real-time credit decisions"]
     end
-    T3 & S3 -->|"SKEW"| I1 --> I2
+    T3 -->|"SKEW"| I1
+    S3 -->|"SKEW"| I1
+    I1 --> I2
       </div>
     </div>
     <div class="row" style="gap:20px">
