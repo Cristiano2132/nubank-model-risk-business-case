@@ -1,0 +1,243 @@
+---
+title: "Compass — Independent Risk Assessment"
+subtitle: "Solara Digital Bank · Model Risk Specialist Case"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    transition: slide
+    background-transition: fade
+    mermaid:
+      theme: default
+execute:
+  echo: false
+  warning: false
+  message: false
+jupyter: python3
+---
+
+```{python}
+#| label: setup
+import sys, os, sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Setup paths based on standard notebook logic
+COMPASS_ROOT = os.path.expanduser('~/Documents/compass-feature-pipeline')
+DATA_DIR = Path(COMPASS_ROOT) / 'data' / 'raw'
+OFFLINE_DB = DATA_DIR / 'offline_store.db'
+ONLINE_DB = DATA_DIR / 'online_store.db'
+
+# Connect to DBs
+conn_off = sqlite3.connect(OFFLINE_DB)
+conn_on  = sqlite3.connect(ONLINE_DB)
+
+df_offline = pd.read_sql('SELECT * FROM offline_features', conn_off)
+df_online  = pd.read_sql('SELECT * FROM online_features', conn_on)
+
+# Pre-compute parity
+df_off_latest = (
+    df_offline.sort_values('as_of', ascending=False)
+    .drop_duplicates('customer_id')[['customer_id', 'value']]
+    .rename(columns={'value': 'offline_value'})
+)
+df_on_val = df_online[['customer_id', 'value', 'computed_at']].rename(columns={'value': 'online_value'})
+df_merged = df_off_latest.merge(df_on_val, on='customer_id')
+df_merged['delta_pct'] = (df_merged['online_value'] - df_merged['offline_value']) / df_merged['offline_value'] * 100
+df_merged['abs_delta'] = df_merged['delta_pct'].abs()
+
+# Pre-compute staleness
+now_utc = datetime.now(UTC)
+df_on_val['computed_at_dt'] = pd.to_datetime(df_on_val['computed_at'], utc=True)
+df_on_val['age_hours'] = (now_utc - df_on_val['computed_at_dt']).dt.total_seconds() / 3600
+
+# Executive Plot Style
+plt.rcParams.update({
+    'figure.facecolor': 'none', 'axes.facecolor': 'none',
+    'axes.edgecolor': '#0f172a', 'axes.labelcolor': '#334155',
+    'text.color': '#0f172a', 'xtick.color': '#475569', 'ytick.color': '#475569',
+    'font.family': 'sans-serif', 'font.size': 14,
+    'legend.frameon': False
+})
+```
+
+## Agenda {background-color="#f8fafc"}
+
+1. **Context** — How Compass operates today.
+2. **Risk Landscape** — Material findings from the live system.
+3. **Assessment Approach** — Framework for independent validation.
+4. **Position on Proposed Changes** — Verdict & remediation paths.
+5. **Data Mesh Governance** — Scaling safety across uneven teams.
+
+---
+
+# 01 Context {background-color="#0f172a" style="color: white;"}
+How Compass Operates Today
+
+## System Overview
+
+```{mermaid}
+graph TB
+    subgraph Inputs["📥 Inputs"]
+        TXN["transactions.csv\n(32,929 rows)"]
+    end
+    subgraph Pipelines["⚙️ Feature Pipelines"]
+        BATCH["Batch Pipeline\n(nightly)"]
+        STREAM["Streaming Pipeline\n(incremental)"]
+    end
+    subgraph Stores["🗄️ Feature Stores"]
+        OFFLINE["Offline Store"]
+        ONLINE["Online Store"]
+    end
+    subgraph Consumers["🏦 Downstream"]
+        UNDER["Underwriting\n(batch)"]
+        INAPP["In-App Credit\n(real-time)"]
+    end
+    
+    TXN --> BATCH
+    TXN --> STREAM
+    BATCH -->|"exact 30d mean"| OFFLINE
+    STREAM -->|"EWMA alpha=0.2"| ONLINE
+    OFFLINE --> UNDER
+    ONLINE --> INAPP
+```
+
+---
+
+# 02 Risk Landscape {background-color="#0f172a" style="color: white;"}
+What I found running the system
+
+## Risk 1 — Training/Serving Skew
+
+**The pipeline is mathematically inconsistent.** 
+The exact same feature `txn_amount_avg_30d` is computed differently depending on the serving path.
+
+```{mermaid}
+graph LR
+    T1["Offline Store"] --> T2["EXACT arithmetic mean"] --> T3["Underwriting Model"]
+    S1["Online Store"] --> S2["EWMA alpha=0.2"] --> S3["In-App Credit Model"]
+    T3 -->|"SKEW"| I1["Miscalibrated Decisions"]
+    S3 -->|"SKEW"| I1
+```
+
+## Evidence: The Skew Distribution
+
+```{python}
+#| label: fig-skew
+#| fig-cap: "Distribution of txn_amount_avg_30d values across customers"
+#| fig-width: 10
+#| fig-height: 4.5
+
+fig, ax = plt.subplots()
+sns.kdeplot(data=df_merged, x="offline_value", color="#0072B2", label="Offline (Exact Mean)", fill=True, ax=ax)
+sns.kdeplot(data=df_merged, x="online_value", color="#D55E00", label="Online (EWMA)", fill=True, ax=ax)
+ax.set_xlabel("Feature Value")
+ax.set_ylabel("Density")
+ax.legend()
+sns.despine()
+plt.show()
+```
+
+:::: {.columns}
+::: {.column width="50%"}
+**Impact**  
+Mean offline/online delta is **29.5%**.
+:::
+::: {.column width="50%"}
+**Consequence**  
+**70% of customers** have >15% divergence.
+:::
+::::
+
+## Risk 2 — Silent Staleness
+
+**The TTL is a dead config.** 
+`FRESHNESS_TTL` is defined in `config.yaml` but is never imported or checked during `OnlineStore.get_features()`.
+
+## Evidence: Feature Age Distribution
+
+```{python}
+#| label: fig-staleness
+#| fig-cap: "Age of features currently residing in the Online Store"
+#| fig-width: 10
+#| fig-height: 4.5
+
+fig, ax = plt.subplots()
+sns.histplot(data=df_on_val, x="age_hours", bins=30, color="#009E73", ax=ax)
+ax.axvline(x=6, color="#D55E00", linestyle="--", label="FRESHNESS_TTL (6h)")
+ax.set_xlabel("Feature Age (Hours)")
+ax.set_ylabel("Customer Count")
+ax.legend()
+sns.despine()
+plt.show()
+```
+
+All 300 customers have features older than the 6-hour SLA. The pipeline is serving stale data without warning.
+
+---
+
+# 03 Assessment Approach {background-color="#0f172a" style="color: white;"}
+How I validate the system
+
+## Testing the Live System
+
+1. **Parity Check:** Query C0001 from both stores. If offline ≠ online, pause.
+2. **Staleness Check:** Query online store metadata. If `age > TTL` without fallback, pause.
+3. **Data Quality Check:** Assert nulls, schemas, and boundaries on `transactions.csv`.
+4. **Deployment Safety:** Look for feature versioning. (None exists).
+5. **Monitoring Scope:** Check `dashboard.py`. (Only tracks API uptime, not data health).
+
+---
+
+# 04 Position on Changes {background-color="#0f172a" style="color: white;"}
+
+## Verdict on Proposed Changes
+
+:::: {.columns}
+::: {.column width="50%"}
+🔴 **PAUSE: Switch to streaming for Underwriting**  
+You cannot train on exact means and serve on EWMA without a major credit policy violation.
+:::
+::: {.column width="50%"}
+🟡 **PROCEED WITH CONDITIONS: Self-serve ML**  
+We can scale the platform, but only if we codify Governance into the SDK.
+:::
+::::
+
+## Remediation Architecture
+
+```{mermaid}
+graph LR
+    subgraph BEFORE["Current State"]
+        B1["Different formulas"]
+        B2["Silent Staleness"]
+    end
+    subgraph AFTER["Target State"]
+        A1["Unified logic: compute_txn_amount_avg_30d()"]
+        A2["StaleFeatureError on expiry"]
+    end
+    B1 --> A1
+    B2 --> A2
+```
+
+---
+
+# 05 Data Mesh {background-color="#0f172a" style="color: white;"}
+Scaling safely
+
+## The Paved Road SDK
+
+Standardize the **Contract**, not the Implementation.
+
+1. **Enforced Schemas:** Cannot push to registry without defined schema.
+2. **Baked-in Quality:** SDK wraps `write_features` with Great Expectations.
+3. **Mandatory Monitoring:** SDK emits PSI and freshness metrics automatically.
+
+## Summary
+
+> The tension isn't between shipping fast and governing well. It's about recognizing that in infrastructure, **unvalidated speed is tech debt.** We must build safety directly into the golden path.

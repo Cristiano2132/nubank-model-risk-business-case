@@ -1,5 +1,43 @@
+# Jupyter & Python
 .ipynb_checkpoints/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Quarto & RMarkdown builds
+.quarto/
+*_files/
+_freeze/
+_site/
+*.quarto_ipynb
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Databases & logs (local data)
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Project scratch / temp
 .create_nb.py
-ARCHITECTURE_files/
+scratch/
