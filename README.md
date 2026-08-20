@@ -31,6 +31,17 @@ A broader strategy for a Data Mesh environment, detailing what to standardize ce
 
 ---
 
+## Tools & Technologies Used
+
+To deliver a reproducible and data-driven analysis, the following stack was utilized in this case:
+
+- **Python (Pandas, NumPy):** Used to simulate production feature data, compute KS statistics (drift), measure parity (training/serving skew), and build the scoring engine.
+- **Jupyter Notebook:** Acts as the primary medium to seamlessly integrate the executive narrative with the executable Python code and empirical evidence.
+- **Matplotlib & Seaborn:** Used to dynamically plot the PMBOK-style Risk Matrix and the framework architecture directly from the KRI outputs.
+- **Git:** Version control of the repository and scripts.
+
+---
+
 ## Instructions
 
 To view the complete analysis, testing, and framework design:
