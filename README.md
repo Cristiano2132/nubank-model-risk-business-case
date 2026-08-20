@@ -1,111 +1,43 @@
-# Compass Model Risk Architecture & KRI Scorecards
+# Compass Feature Pipeline — Risk Assessment & Governance Framework
 
-## 1. Overview: Executive KRI Architecture
+> **Role:** Model Risk Specialist — ML/AI Data & Infrastructure Risks (IC5)
+> **Candidate:** Cristiano Oliveira
 
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'fontSize': '13px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 10, 'padding': 4, 'subGraphPadding': 6}}}%%
-flowchart LR
-    ROOT["🎯 <b>Compass Risk Score</b><br>2LoD Multi-Dimension<br>Evaluation"]
+This repository contains the final deliverable for the Solara Digital Bank business case, focusing on the infrastructure and data risk assessment of the **Compass** feature store and serving pipeline.
 
-    ROOT -->|"60%"| QUANTI_HDR
-    ROOT -->|"40%"| QUALI_HDR
+## Deliverable Structure
 
-    subgraph DIM_QUANTI ["Empirical Evidence (Live Testing)"]
-        direction TB
-        QUANTI_HDR["📊 <b>Quantitative Dimension</b> (60% Weight)"]
-        K1["<b>KRI 1: Feature Parity Skew</b><br>Divergence between batch (training) and streaming (serving) calculations"]
-        K2["<b>KRI 2: Population Drift (KS)</b><br>Statistical distribution shift between offline baseline and online requests"]
-        K3["<b>KRI 3: Silent Staleness</b><br>Frequency of expired customer profiles served beyond the 6h TTL"]
-        
-        QUANTI_HDR -->|"35%"| K1
-        QUANTI_HDR -->|"35%"| K2
-        QUANTI_HDR -->|"30%"| K3
-    end
+As requested by the case guidelines, the analysis and framework design are divided into four main areas. All technical evidence, formal testing, and governance architecture are documented and executed within the main notebook.
 
-    subgraph DIM_QUALI ["Operational Maturity & Safeguards"]
-        direction TB
-        QUALI_HDR["🛡️ <b>Qualitative Dimension</b> (40% Weight)"]
-        K4["<b>KRI 4: Feature Contracts</b><br>Standardized metadata coverage: schema, SLA, owner, and valid bounds"]
-        K5["<b>KRI 5: CI/CD Validation Gates</b><br>Automated pull-request checks for parity, schema changes, and drift"]
-        K6["<b>KRI 6: Confidence Envelope</b><br>Real-time circuit breakers triggering human fallback on abnormal features"]
-        K7["<b>KRI 7: Semantic Observability</b><br>Monitoring data health and distribution drift alongside uptime and latency"]
-        
-        QUALI_HDR -->|"25%"| K4
-        QUALI_HDR -->|"25%"| K5
-        QUALI_HDR -->|"25%"| K6
-        QUALI_HDR -->|"25%"| K7
-    end
+### 1. Risk Landscape & Assessment Approach
+*Context: Question 1 — Infrastructure & Data Risk Assessment (hands-on)*
 
-    classDef rootStyle fill:#2d0a4e,stroke:#a855f7,stroke-width:2px,color:#ffffff;
-    classDef headerQuanti fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
-    classDef headerQuali fill:#4c1d95,stroke:#8b5cf6,stroke-width:2px,color:#ffffff;
-    classDef quantiStyle fill:#0f2942,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff;
-    classDef qualiStyle fill:#2e1065,stroke:#8b5cf6,stroke-width:1.5px,color:#ffffff;
+The notebook contains a deep dive into the live system, simulating the batch and streaming pathways to uncover hidden regressions. We've mapped the formal tests to specific risks (Training/Serving Skew, Silent Staleness, Drift, etc.). 
 
-    class ROOT rootStyle;
-    class QUANTI_HDR headerQuanti;
-    class QUALI_HDR headerQuali;
-    class K1,K2,K3 quantiStyle;
-    class K4,K5,K6,K7 qualiStyle;
-```
+### 2. Position on Proposed Changes
+*Context: Q1.3*
+
+Based on the quantitative findings, I present a clear, independent view on the two proposed changes (real-time credit-line top-ups with no human review, and lightening the feature code review process). 
+
+### 3. Governance Foundations
+*Context: Q1.4*
+
+A proposal of the most critical controls and monitoring mechanisms that Solara must implement to safely operate Compass (e.g., Confidence Envelopes, Feature Contracts, and Semantic Observability).
+
+### 4. Governance Framework Design (Org-Wide)
+*Context: Question 2*
+
+A broader strategy for a Data Mesh environment, detailing what to standardize centrally (Model Risk guards) vs. what to leave to domain autonomy, how to implement KRIs without noise, and how to scale this across teams with varying maturity levels.
 
 ---
 
-## 2. Quantitative Dimension Deep Dive (Empirical Data Health)
+## Instructions
 
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'fontSize': '13px'}, 'flowchart': {'nodeSpacing': 30, 'rankSpacing': 12, 'padding': 6}}}%%
-flowchart LR
-    Q_ROOT["📊 <b>Quantitative Score</b><br>Overall Weight: <b>60%</b><br>Score: <b style='color:#ef4444;'>0.0 / 100</b> (Critical)"]
+To view the complete analysis, testing, and framework design:
 
-    Q_ROOT -->|"35% Weight"| Q1
-    Q_ROOT -->|"35% Weight"| Q2
-    Q_ROOT -->|"30% Weight"| Q3
+1. **Open the Notebook:** `business_case_answers.ipynb`
+   - This notebook contains the narrative, the execution of the tests, and the visual outputs (Risk Scorecards and Framework architecture diagrams).
+2. **Review the Architecture:** `ARCHITECTURE.md`
+   - Contains UML diagrams, data flows, and schema analysis used as the baseline to understand the system's current state and vulnerabilities.
 
-    subgraph CARDS ["Empirical Tests & Scoring Rules"]
-        direction TB
-        Q1["<b>KRI 1: Feature Parity (Training/Serving Skew)</b><br>• <b>Measurement:</b> Mean Absolute % Delta between Batch & Streaming<br>• <b>Scoring Rule:</b> &lt;5% = 100 pts | 5-15% = 50 pts | &gt;15% = 0 pts<br>• <b>Live Test Result:</b> 29.9% Delta (Exceeds tolerance) ➔ <b style='color:#ef4444;'>0 pts</b>"]
-        
-        Q2["<b>KRI 2: Statistical Drift (KS Statistic)</b><br>• <b>Measurement:</b> Max ECDF distance between Offline & Online distributions<br>• <b>Scoring Rule:</b> &lt;1% = 100 pts | &lt;5% = 80 pts | &lt;7% = 50 pts | &ge;7% = 0 pts<br>• <b>Live Test Result:</b> KS = 7.1% (Severe distribution shift) ➔ <b style='color:#ef4444;'>0 pts</b>"]
-        
-        Q3["<b>KRI 3: Silent Staleness</b><br>• <b>Measurement:</b> % of requests serving feature age exceeding 6h TTL<br>• <b>Scoring Rule:</b> 0% = 100 pts | 0.1-5% = 50 pts | &gt;5% = 0 pts<br>• <b>Live Test Result:</b> 4.3% stale + no TTL validation in code ➔ <b style='color:#f59e0b;'>50 pts</b>"]
-    end
-
-    classDef qRoot fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
-    classDef qCard fill:#0f2942,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff;
-
-    class Q_ROOT qRoot;
-    class Q1,Q2,Q3 qCard;
-```
-
----
-
-## 3. Qualitative Dimension Deep Dive (Governance & Controls)
-
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, sans-serif', 'fontSize': '13px'}, 'flowchart': {'nodeSpacing': 30, 'rankSpacing': 12, 'padding': 6}}}%%
-flowchart LR
-    C_ROOT["🛡️ <b>Qualitative Score</b><br>Overall Weight: <b>40%</b><br>Score: <b style='color:#f59e0b;'>25.0 / 100</b> (High Risk)"]
-
-    C_ROOT -->|"25% Weight"| C1
-    C_ROOT -->|"25% Weight"| C2
-    C_ROOT -->|"25% Weight"| C3
-    C_ROOT -->|"25% Weight"| C4
-
-    subgraph GOV_CARDS ["Control Assessments & Scoring Rules"]
-        direction TB
-        C1["<b>KRI 4: Feature Contract Completeness</b><br>• <b>Measurement:</b> Mandatory tags (name, formula, owner, version, bounds, SLA)<br>• <b>Scoring Rule:</b> (Implemented Tags / 6) × 100<br>• <b>Audit Status:</b> 2 of 6 tags present (name, formula only) ➔ <b style='color:#f59e0b;'>33.3 pts</b>"]
-        
-        C2["<b>KRI 5: CI/CD Validation Gates</b><br>• <b>Measurement:</b> Automated gates (Parity, KS check, Schema, Shadow deploy)<br>• <b>Scoring Rule:</b> (Active Automated Gates / 4) × 100<br>• <b>Audit Status:</b> 0 of 4 active (100% manual 5-day review) ➔ <b style='color:#ef4444;'>0.0 pts</b>"]
-        
-        C3["<b>KRI 6: Confidence Envelope Safeguards</b><br>• <b>Measurement:</b> Active circuit breakers (age &lt; TTL, |delta| &lt; limit, history &ge; 30d)<br>• <b>Scoring Rule:</b> (Implemented Rules / 3) × 100<br>• <b>Audit Status:</b> 0 of 3 implemented (unguarded scoring) ➔ <b style='color:#ef4444;'>0.0 pts</b>"]
-        
-        C4["<b>KRI 7: Semantic Observability</b><br>• <b>Measurement:</b> Monitored pillars (Latency, Uptime availability, Drift)<br>• <b>Scoring Rule:</b> (Monitored Pillars / 3) × 100<br>• <b>Audit Status:</b> 2 of 3 active (Latency & Uptime only; blind to Drift) ➔ <b style='color:#f59e0b;'>66.7 pts</b>"]
-    end
-
-    classDef cRoot fill:#4c1d95,stroke:#8b5cf6,stroke-width:2px,color:#ffffff;
-    classDef cCard fill:#2e1065,stroke:#8b5cf6,stroke-width:1.5px,color:#ffffff;
-
-    class C_ROOT cRoot;
-    class C1,C2,C3,C4 cCard;
-```
+*(Note: The `business_case_answers.ipynb` contains executable Python code that generates the evidence and visual scorecards dynamically).*
