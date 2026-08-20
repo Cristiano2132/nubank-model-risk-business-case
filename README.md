@@ -39,6 +39,8 @@ To deliver a reproducible and data-driven analysis, the following stack was util
 - **Jupyter Notebook:** Acts as the primary medium to seamlessly integrate the executive narrative with the executable Python code and empirical evidence.
 - **Matplotlib & Seaborn:** Used to dynamically plot the PMBOK-style Risk Matrix and the framework architecture directly from the KRI outputs.
 - **Git:** Version control of the repository and scripts.
+- **Antigravity AI Assistant:** Leveraged as a pair-programming partner to assist with Python refactoring, logic calibration (e.g. dynamic risk matrices), and markdown documentation translation/structuring.
+
 
 ---
 
