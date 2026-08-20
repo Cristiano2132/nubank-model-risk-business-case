@@ -38,6 +38,7 @@ To deliver a reproducible and data-driven analysis, the following stack was util
 - **Python (Pandas, NumPy):** Used to simulate production feature data, compute KS statistics (drift), measure parity (training/serving skew), and build the scoring engine.
 - **Jupyter Notebook:** Acts as the primary medium to seamlessly integrate the executive narrative with the executable Python code and empirical evidence.
 - **Matplotlib & Seaborn:** Used to dynamically plot the PMBOK-style Risk Matrix and the framework architecture directly from the KRI outputs.
+- **uv & Pip:** Fast Python package and deterministic environment management (`pyproject.toml`, `uv.lock`, and `requirements.txt`).
 - **Git:** Version control of the repository and scripts.
 - **Antigravity AI Assistant:** Leveraged as a pair-programming partner to assist with Python refactoring, logic calibration (e.g. dynamic risk matrices), and markdown documentation translation/structuring.
 
@@ -46,7 +47,18 @@ To deliver a reproducible and data-driven analysis, the following stack was util
 
 To execute the notebook and reproduce all empirical tests and scorecards:
 
-### 1. Clone the Compass Feature Pipeline (Prerequisite)
+### 1. Environment Setup (via `uv` or `pip`)
+This repository includes deterministic lockfiles for seamless reproduction:
+
+```bash
+# Option A: Using uv (Recommended - exact reproduction)
+uv sync
+
+# Option B: Using standard pip
+pip install -r requirements.txt
+```
+
+### 2. Clone the Compass Feature Pipeline (Prerequisite)
 The data and backend pipeline are hosted in the Compass repository:
 ```bash
 # Clone the Compass pipeline repository locally
@@ -54,10 +66,10 @@ git clone https://github.com/lennon-cruz/compass-feature-pipeline.git ~/Document
 ```
 *(Ensure the Compass data is populated in `compass-feature-pipeline/data/` with `offline_store.db`, `online_store.db`, and `transactions.csv`)*.
 
-### 2. Configure Path & Run the Notebook
+### 3. Configure Path & Run the Notebook
 1. **Open the Notebook:** `business_case_answers.ipynb`
 2. In **Cell 2 (Setup)**, verify that `DATA_DIR` and `COMPASS_SRC` point to your local Compass repo path (by default, it searches `~/Documents/compass-feature-pipeline`).
 3. Run all cells (`Run All`) to dynamically execute the quantitative tests, compute KRIs, and render the visual PMBOK Risk Matrix.
 
-### 3. Additional Architecture Baseline
+### 4. Additional Architecture Baseline
 - **`ARCHITECTURE.md`**: Contains UML diagrams, data flows, and schema analysis used as the baseline for this risk assessment.
