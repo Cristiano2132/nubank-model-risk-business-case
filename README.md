@@ -42,15 +42,22 @@ To deliver a reproducible and data-driven analysis, the following stack was util
 - **Antigravity AI Assistant:** Leveraged as a pair-programming partner to assist with Python refactoring, logic calibration (e.g. dynamic risk matrices), and markdown documentation translation/structuring.
 
 
----
+## Instructions & Local Reproduction
 
-## Instructions
+To execute the notebook and reproduce all empirical tests and scorecards:
 
-To view the complete analysis, testing, and framework design:
+### 1. Clone the Compass Feature Pipeline (Prerequisite)
+The data and backend pipeline are hosted in the Compass repository:
+```bash
+# Clone the Compass pipeline repository locally
+git clone https://github.com/lennon-cruz/compass-feature-pipeline.git ~/Documents/compass-feature-pipeline
+```
+*(Ensure the Compass data is populated in `compass-feature-pipeline/data/` with `offline_store.db`, `online_store.db`, and `transactions.csv`)*.
 
+### 2. Configure Path & Run the Notebook
 1. **Open the Notebook:** `business_case_answers.ipynb`
-   - This notebook contains the narrative, the execution of the tests, and the visual outputs (Risk Scorecards and Framework architecture diagrams).
-2. **Review the Architecture:** `ARCHITECTURE.md`
-   - Contains UML diagrams, data flows, and schema analysis used as the baseline to understand the system's current state and vulnerabilities.
+2. In **Cell 2 (Setup)**, verify that `DATA_DIR` and `COMPASS_SRC` point to your local Compass repo path (by default, it searches `~/Documents/compass-feature-pipeline`).
+3. Run all cells (`Run All`) to dynamically execute the quantitative tests, compute KRIs, and render the visual PMBOK Risk Matrix.
 
-*(Note: The `business_case_answers.ipynb` contains executable Python code that generates the evidence and visual scorecards dynamically).*
+### 3. Additional Architecture Baseline
+- **`ARCHITECTURE.md`**: Contains UML diagrams, data flows, and schema analysis used as the baseline for this risk assessment.
