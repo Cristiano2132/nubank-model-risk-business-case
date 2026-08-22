@@ -107,26 +107,16 @@
       {\color{nuMagenta}\rule{3.2cm}{2.0pt}}
     };
 
-    % Minimalist Bottom Metadata Section (2 Clean Columns with Thin Divider)
-    % Bottom Horizontal Divider Line
-    \draw[white!15, line width=0.6pt] ($(current page.south west)+(1.2cm,2.3cm)$) -- ($(current page.south east)+(-1.2cm,2.3cm)$);
-
-    % Left Column (Candidate & Role)
-    \node[anchor=north west, text width=6.6cm, align=left] at ($(current page.south west)+(1.2cm,2.05cm)$) {
-      {\fontsize{7.2pt}{10.5pt}\selectfont
-        \textcolor{white!45}{\uppercase{Candidate}}\\[0.05cm]
-        \textbf{\textcolor{white}{Cristiano Oliveira}}\\[0.2cm]
-        \textcolor{white!45}{\uppercase{Role}}\\[0.05cm]
-        \textcolor{white}{Model Risk Specialist --- ML/AI Data \& Infra (IC5)}
-      }
-    };
-
-    % Right Column (Target & Context)
-    \node[anchor=north west, text width=6.6cm, align=left] at ($(current page.south west)+(8.4cm,2.05cm)$) {
-      {\fontsize{7.2pt}{10.5pt}\selectfont
-        \textcolor{white!45}{\uppercase{Target System}}\\[0.05cm]
-        \textbf{\textcolor{white}{Solara Digital Bank --- Compass Feature Store}}\\[0.2cm]
-        \textcolor{white!45}{\uppercase{Evaluation Context \& Date}}\\[0.05cm]
+    % Minimalist Right-Aligned Bottom Metadata Block (No horizontal line)
+    \node[anchor=south east, text width=7.4cm, align=left] at ($(current page.south east)+(-1.2cm,1.0cm)$) {
+      {\fontsize{6.2pt}{9.2pt}\selectfont
+        \textcolor{white!45}{CANDIDATE}\\[0.03cm]
+        \textbf{\textcolor{white}{Cristiano Oliveira}}\\[0.15cm]
+        \textcolor{white!45}{ROLE}\\[0.03cm]
+        \textcolor{white}{Model Risk Specialist --- ML/AI Data \& Infra (IC5)}\\[0.15cm]
+        \textcolor{white!45}{TARGET SYSTEM}\\[0.03cm]
+        \textbf{\textcolor{white}{Solara Digital Bank --- Compass Feature Store}}\\[0.15cm]
+        \textcolor{white!45}{CONTEXT \& DATE}\\[0.03cm]
         \textcolor{white}{2LoD Independent Review \;\textbar{}\; August 2026}
       }
     };
