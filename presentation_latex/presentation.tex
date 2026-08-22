@@ -87,7 +87,7 @@
 \begin{document}
 
 % ==============================================================================
-% SLIDE 1: Title Slide (Dark Luxury Purple Theme)
+% SLIDE 1: Title Slide (Luxury Dark Minimalist Executive Layout)
 % ==============================================================================
 {
 \usebackgroundtemplate{%
@@ -95,23 +95,40 @@
 }
 \begin{frame}[plain]
   \begin{tikzpicture}[remember picture,overlay]
-    % Main Title in Top-Left quadrant
-    \node[anchor=north west, text width=12.6cm] at ($(current page.north west)+(1.0cm,-2.2cm)$) {
-      {\fontsize{20pt}{25pt}\selectfont \textbf{\textcolor{white}{Compass Feature Pipeline:}}\\[0.15cm]
-      \textbf{\textcolor{white}{Independent Model Risk Assessment}}}
+    % Overline / Category Tag
+    \node[anchor=north west] at ($(current page.north west)+(1.2cm,-1.8cm)$) {
+      {\fontsize{6.5pt}{7pt}\selectfont \textbf{\textcolor{nuMagenta!90}{SOLARA DIGITAL BANK \;\textbullet\; MODEL RISK MANAGEMENT (2LoD)}}}
     };
     
-    % Accent decorative line (bottom left)
-    \draw[nuMagenta!90, line width=1.5pt] ($(current page.south west)+(1.0cm,1.2cm)$) -- ++(3.8cm,0);
+    % Main Title & Subtitle
+    \node[anchor=north west, text width=12.0cm, align=left] at ($(current page.north west)+(1.2cm,-2.35cm)$) {
+      {\fontsize{24pt}{28pt}\selectfont \textbf{\textcolor{white}{Compass Feature Pipeline}}}\\[0.22cm]
+      {\fontsize{13pt}{16pt}\selectfont \textcolor{white!80}{Independent Model Risk \& Governance Assessment}}\\[0.35cm]
+      {\color{nuMagenta}\rule{3.2cm}{2.0pt}}
+    };
 
-    % Metadata Block (bottom right)
-    \node[anchor=south east, text width=7.2cm, align=left] at ($(current page.south east)+(-1.0cm,1.2cm)$) {
-      \fontsize{7.5pt}{11pt}\selectfont\color{white!90}
-      \textbf{Candidate:} Cristiano Oliveira\\[0.12cm]
-      \textbf{Role:} Model Risk Specialist --- ML/AI Data \& Infrastructure Risks (IC5)\\[0.12cm]
-      \textbf{Target System:} Solara Digital Bank --- Compass Feature Store\\[0.12cm]
-      \textbf{Evaluation Context:} 2nd Line of Defense (2LoD) Independent Review\\[0.12cm]
-      \textbf{Date:} August 2026
+    % Minimalist Bottom Metadata Section (2 Clean Columns with Thin Divider)
+    % Bottom Horizontal Divider Line
+    \draw[white!15, line width=0.6pt] ($(current page.south west)+(1.2cm,2.3cm)$) -- ($(current page.south east)+(-1.2cm,2.3cm)$);
+
+    % Left Column (Candidate & Role)
+    \node[anchor=north west, text width=6.6cm, align=left] at ($(current page.south west)+(1.2cm,2.05cm)$) {
+      {\fontsize{7.2pt}{10.5pt}\selectfont
+        \textcolor{white!45}{\uppercase{Candidate}}\\[0.05cm]
+        \textbf{\textcolor{white}{Cristiano Oliveira}}\\[0.2cm]
+        \textcolor{white!45}{\uppercase{Role}}\\[0.05cm]
+        \textcolor{white}{Model Risk Specialist --- ML/AI Data \& Infra (IC5)}
+      }
+    };
+
+    % Right Column (Target & Context)
+    \node[anchor=north west, text width=6.6cm, align=left] at ($(current page.south west)+(8.4cm,2.05cm)$) {
+      {\fontsize{7.2pt}{10.5pt}\selectfont
+        \textcolor{white!45}{\uppercase{Target System}}\\[0.05cm]
+        \textbf{\textcolor{white}{Solara Digital Bank --- Compass Feature Store}}\\[0.2cm]
+        \textcolor{white!45}{\uppercase{Evaluation Context \& Date}}\\[0.05cm]
+        \textcolor{white}{2LoD Independent Review \;\textbar{}\; August 2026}
+      }
     };
   \end{tikzpicture}
 \end{frame}
